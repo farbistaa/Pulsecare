@@ -1,0 +1,1 @@
+ALTER TABLE "blood_donations" RENAME COLUMN "testimonials" TO "testimonial";

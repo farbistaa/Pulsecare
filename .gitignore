@@ -1,0 +1,45 @@
+# Node
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Build output
+dist/
+build/
+server/public/
+
+# Environment variables
+.env
+
+# Logs
+logs/
+*.log
+
+# IDE / Editor
+.vscode/
+.idea/
+.DS_Store
+
+# System / Cache
+.cache/
+.tmp/
+.env.local
+
+# App-specific
+uploads/
+coverage/
+drizzle/
+migrations/meta/*.json
+
+# Vite
+vite.config.ts.*
+.vite/
+
+# GitHub artifacts
+*.tar.gz
+
+# Repl.it
+.replit/
+
+# Semgrep / Config files
+.config/

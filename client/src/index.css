@@ -1,0 +1,216 @@
+/* Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&family=Poppins:wght@100;200;300;400;500;600;700;800;900&display=swap');
+/* Tailwind v3 directives */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* --------------------------- */
+/* Custom CSS Variables         */
+/* --------------------------- */
+:root {
+  --background: 0 0% 100%;
+  --foreground: 20 14.3% 4.1%;
+  --muted: 60 4.8% 95.9%;
+  --muted-foreground: 25 5.3% 44.7%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 20 14.3% 4.1%;
+  --card: 0 0% 100%;
+  --card-foreground: 20 14.3% 4.1%;
+  --border: 20 5.9% 90%;
+  --input: 20 5.9% 90%;
+  --primary: 0 84% 54%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 220 91% 37%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 60 4.8% 95.9%;
+  --accent-foreground: 24 9.8% 10%;
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 60 9.1% 97.8%;
+  --ring: 0 84% 54%;
+  --radius: 0.75rem;
+  --success: 142 76% 36%;
+  --warning: 25 95% 53%;
+  /* Immersive Design Variables */
+  --pulse-primary: 0 84% 54%;
+  --pulse-secondary: 0 79% 63%;
+  --pulse-accent: 12 100% 85%;
+  --glass-bg: rgba(255, 255, 255, 0.05);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 50px rgba(220, 38, 38, 0.15);
+  --gradient-primary: linear-gradient(135deg, #DC2626 0%, #EF4444 50%, #F87171 100%);
+  --gradient-secondary: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #60A5FA 100%);
+  --gradient-mesh: radial-gradient(circle at 20% 80%, rgba(220, 38, 38, 0.1) 0%, transparent 50%),
+                   radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                   radial-gradient(circle at 40% 40%, rgba(34, 197, 94, 0.05) 0%, transparent 50%);
+}
+
+.dark {
+  --background: 240 10% 3.9%;
+  --foreground: 0 0% 98%;
+  --muted: 240 3.7% 15.9%;
+  --muted-foreground: 240 5% 64.9%;
+  --popover: 240 10% 3.9%;
+  --popover-foreground: 0 0% 98%;
+  --card: 240 10% 3.9%;
+  --card-foreground: 0 0% 98%;
+  --border: 240 3.7% 15.9%;
+  --input: 240 3.7% 15.9%;
+  --primary: 0 84% 54%;
+  --primary-foreground: 0 0% 98%;
+  --secondary: 220 91% 37%;
+  --secondary-foreground: 0 0% 98%;
+  --accent: 240 3.7% 15.9%;
+  --accent-foreground: 0 0% 98%;
+  --destructive: 0 62.8% 30.6%;
+  --destructive-foreground: 0 0% 98%;
+  --ring: 240 4.9% 83.9%;
+  --success: 142 70% 45%;
+  --warning: 25 95% 53%;
+  /* Dark mode specific immersive variables */
+  --glass-bg: rgba(0, 0, 0, 0.2);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --shadow-glow: 0 0 50px rgba(59, 130, 246, 0.15);
+  --gradient-primary: linear-gradient(135deg, #DC2626 0%, #EF4444 50%, #F87171 100%);
+  --gradient-secondary: linear-gradient(135deg, #1E40AF 0%, #3B82F6 50%, #60A5FA 100%);
+  --gradient-mesh: radial-gradient(circle at 20% 80%, rgba(220, 38, 38, 0.2) 0%, transparent 50%),
+                   radial-gradient(circle at 80% 20%, rgba(59, 130, 246, 0.2) 0%, transparent 50%),
+                   radial-gradient(circle at 40% 40%, rgba(34, 197, 94, 0.1) 0%, transparent 50%);
+}
+
+/* --------------------------- */
+/* Base Styles                  */
+/* --------------------------- */
+* {
+  border-color: hsl(var(--border));
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+/* Ensure dark mode applies to entire document */
+html.dark body {
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
+}
+
+/* --------------------------- */
+/* Custom Components & Animations */
+/* --------------------------- */
+.transition-all {
+  transition: all 0.2s ease-in-out;
+}
+.modal-backdrop {
+  backdrop-filter: blur(4px);
+}
+.text-success { color: hsl(var(--success)); }
+.text-warning { color: hsl(var(--warning)); }
+.bg-success { background-color: hsl(var(--success)); }
+.bg-warning { background-color: hsl(var(--warning)); }
+.bg-success/10 { background-color: hsl(var(--success)/0.1); }
+.bg-warning/10 { background-color: hsl(var(--warning)/0.1); }
+.glass-effect {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid var(--glass-border);
+}
+.morphism-card {
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(40px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+}
+.dark .morphism-card {
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.gradient-text {
+  background: var(--gradient-primary);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  /* Prevent animation issues */
+  will-change: auto;
+  transition: none;
+}
+.floating-animation { animation: floating 6s ease-in-out infinite; }
+.pulse-glow { animation: pulseGlow 2s ease-in-out infinite; }
+.shimmer-effect {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+.dark .shimmer-effect {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+}
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.ripple-effect:hover {
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+.dark .ripple-effect:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+.mesh-gradient {
+  background: var(--gradient-mesh);
+}
+.interactive-card {
+  transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+  cursor: pointer;
+}
+.interactive-card:hover {
+  transform: translateY(-8px) rotateX(5deg);
+  box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+}
+.dark .interactive-card:hover {
+  box-shadow: 0 25px 50px rgba(0,0,0,0.4);
+}
+.progress-ring { transition: stroke-dasharray 0.6s ease-in-out; }
+.achievement-badge { animation: bounceIn 0.6s ease-out; }
+.reward-pulse { animation: rewardPulse 1s ease-out; }
+.success-celebration { animation: successCelebration 1.2s ease-out; }
+.border-success { border-color: hsl(var(--success)); }
+.border-warning { border-color: hsl(var(--warning)); }
+
+/* --------------------------- */
+/* Keyframes                    */
+/* --------------------------- */
+@keyframes floating {
+  0%,100% { transform: translateY(0); }
+  50% { transform: translateY(-20px); }
+}
+@keyframes pulseGlow {
+  0%,100% { box-shadow: 0 0 30px rgba(220,38,38,0.3); transform: scale(1); }
+  50% { box-shadow: 0 0 50px rgba(220,38,38,0.6); transform: scale(1.02); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes bounceIn {
+  0% { opacity: 0; transform: scale(0.3); }
+  50% { opacity: 1; transform: scale(1.05); }
+  70% { transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1); }
+}
+@keyframes rewardPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+@keyframes successCelebration {
+  0% { opacity: 0; transform: scale(0.8) rotate(-10deg); }
+  25% { opacity: 1; transform: scale(1.1) rotate(5deg); }
+  50% { transform: scale(0.95) rotate(-2deg); }
+  75% { transform: scale(1.02) rotate(1deg); }
+  100% { opacity: 1; transform: scale(1) rotate(0deg); }
+}

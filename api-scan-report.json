@@ -1,0 +1,1537 @@
+{
+  "project": "PulseCare",
+  "timestamp": "2025-09-22T16:47:28.212Z",
+  "summary": {
+    "backendEndpoints": 143,
+    "frontendCalls": 35
+  },
+  "backend": [
+    {
+      "method": "POST",
+      "endpoint": "/api/assign-gender",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    let maleCount = 0, femaleCount = 0, unknownCount = 0, updatedCount = 0;\r\n    \r\n   ..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/gender-stats",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    // Get gender statistics\r\n    const stats = await db.execute('SELECT gender, COUNT(*) as count FROM users GROUP BY gender');\r\n    \r\n   ..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/assign-avatars",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const maleAvatarDir = path.join(process.cwd(), 'client', 'src', 'assets', 'MaleAvatar');\r\n    const femaleAvatarDir = path.join(process..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/test",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "json",
+          "example": "{ message: \"Test endpoint works!\", timestamp: new Date("
+        }
+      ],
+      "handler": "\r\n  res.json({ message: \"Test endpoint works!\", timestamp: new Date().toISOString() "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/simple-verify",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    // Get all users and filter in JavaScript\r\n    const allUsers = await db.select().from(users);\r\n    const usersWithAvatars = allUsers\r\n..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/avatar-stats",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    \r\n    const stats = {\r\n      male: {\r\n        total: allUsers.filter(u => u.gender..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/improved-assign-gender",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    let maleCount = 0, femaleCount = 0, unknownCount = 0, updatedCount = 0, alreadyHas..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/upload-avatar",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/reset-avatar",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const { userId "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/force-asset-avatars",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const maleAvatarDir = path.join(process.cwd(), 'client', 'src', 'assets', 'MaleAvatar');\r\n    const femaleAvatarDir = path.join(process..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/user-gender-stats",
+      "file": "server\\avatar-management.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    \r\n    const genderStats = {\r\n      total: allUsers.length,\r\n      male: allUsers.f..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/assign-gender",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    let maleCount = 0, femaleCount = 0, unknownCount = 0, updatedCount = 0;\r\n    \r\n   ..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/gender-stats",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    // Get gender statistics\r\n    const stats = await db.execute('SELECT gender, COUNT(*) as count FROM users GROUP BY gender');\r\n    \r\n   ..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/assign-avatars",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const maleAvatarDir = path.join(process.cwd(), 'client', 'src', 'assets', 'MaleAvatar');\r\n    const femaleAvatarDir = path.join(process..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/test",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "json",
+          "example": "{ message: \"Test endpoint works!\", timestamp: new Date("
+        }
+      ],
+      "handler": "\r\n  res.json({ message: \"Test endpoint works!\", timestamp: new Date().toISOString() "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/simple-verify",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    // Get all users and filter in JavaScript\r\n    const allUsers = await db.select().from(users);\r\n    const usersWithAvatars = allUsers\r\n..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/avatar-stats",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    \r\n    const stats = {\r\n      male: {\r\n        total: allUsers.filter(u => u.gender..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/improved-assign-gender",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    let maleCount = 0, femaleCount = 0, unknownCount = 0, updatedCount = 0, alreadyHas..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/upload-avatar",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/reset-avatar",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const { userId "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/force-asset-avatars",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const maleAvatarDir = path.join(process.cwd(), 'client', 'src', 'assets', 'MaleAvatar');\r\n    const femaleAvatarDir = path.join(process..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/careful-assign-avatars",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const maleAvatarDir = path.join(process.cwd(), 'client', 'src', 'assets', 'MaleAvatar');\r\n    const femaleAvatarDir = path.join(process..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/check-gender-mismatches",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    const mismatches = [];\r\n    const noGenderUsers = [];\r\n    \r\n    for (const user o..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/fix-gender-mismatches",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    let fixedMismatches = 0;\r\n    let assignedGender = 0;\r\n    \r\n    for (const user o..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/aggressive-gender-fix",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const allUsers = await db.select().from(users);\r\n    let fixedMismatches = 0;\r\n    let assignedGender = 0;\r\n    \r\n    // Enhanced gende..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/fix-user-gender",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    const { userId, gender "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/assign-random-avatars",
+      "file": "server\\index.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\r\n  try {\r\n    // Define paths to avatar directories\r\n    const maleAvatarDir = path.join(process.cwd(), 'client', 'src', 'assets', 'MaleAvatar');\r\n  ..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/:id",
+      "file": "server\\index.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [
+        {
+          "type": "status",
+          "example": "400"
+        }
+      ],
+      "handler": "\r\n  try {\r\n    const profileId = parseInt(req.params.id);\r\n    \r\n    if (isNaN(profileId)) {\r\n      return res.status(400).json({ error: 'Invalid prof..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/compliance/report",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "json",
+          "example": "report"
+        }
+      ],
+      "handler": "\n    const report = generateComplianceReport();\n    res.json(report);\n  "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/statistics",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "json",
+          "example": "stats"
+        }
+      ],
+      "handler": "\n    try {\n      const stats = await storage.getStatistics();\n      res.json(stats);\n    "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/register",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "400"
+        }
+      ],
+      "handler": "\n    try {\n      const userData = insertUserSchema.parse(req.body);\n      // Check if user already exists\n      const existingUserByEmail = await stor..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/login",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { identifier, password, rememberMe "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/request-password-reset",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { identifier "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/verify-password-reset",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { token, otp, newPassword "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/donors/search",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { bloodGroup, district, isAvailable, page = 1, limit = 9 "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/emergency-requests",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      // Check if user is authenticated\n      if (!req.session?.userId) {\n        return res.status(401).json({ \n          message: \"Authen..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/emergency-requests",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const requests = await storage.getEmergencyRequests();\n      res.json({ requests "
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/api/emergency-requests/:id/status",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/emergency-requests/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/emergency-requests/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/emergency-requests/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/avatar",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/cover",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/bio",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/work-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/work-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile/work-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/profile/work-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/education",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/education",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile/education/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/profile/education/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/donation-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/donation-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile/donation-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/profile/donation-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/testimonials",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/testimonials",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/testimonials/:id/report",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/social-links",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile/social-links",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/location",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile/location",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/privacy-settings",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/privacy-settings",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/security",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile/security",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/red-badge-request",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/deactivate",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/reactivation-request",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "201"
+        }
+      ],
+      "handler": "\n    try {\n      const reactivationData = req.body;\n      // Mock implementation - return success with mock request ID\n      res.status(201).json({\n  ..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/eligibility",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/profile/sync",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "401"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = req.session?.userId;\n      if (!userId) {\n        return res.status(401).json({ message: \"Not authenticated\" "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/api/users/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/donations",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { id "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/donations",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const donations = await storage.getAllDonations();\n      res.json({ donations "
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/admin/stats",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/admin/dashboard-data",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/health",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "json",
+          "example": "{ status: \"ok\", timestamp: new Date("
+        }
+      ],
+      "handler": "\n    res.json({ status: \"ok\", timestamp: new Date().toISOString() "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/seed",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      // Create admin user\n      const existingAdmin = await storage.getUserByUsername(\"admin\");\n      if (!existingAdmin) {\n        await ..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/profile",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/auth/check",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    if (req.session?.userId) {\n      // Get full user details from database\n      const user = await storage.getUser(req.session.userId);\n      if (u..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/badges/:userId",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/badges/share/:userId/:badgeId",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/messages/send",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/messages/:userId",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/profile/:userId/privacy-aware",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/profile",
+      "file": "server\\routes.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [
+        {
+          "type": "status",
+          "example": "404"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = parseInt(req.params.id);\n      const profileData = await storage.getUserProfile(userId);\n      \n      if (!profileData..."
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/users/:id/bio",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/profile-photo",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/upload-photo",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/cover-photo",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/work-history",
+      "file": "server\\routes.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [
+        {
+          "type": "json",
+          "example": "workHistory"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = parseInt(req.params.id);\n      const workHistory = await storage.getUserWorkHistory(userId);\n      res.json(workHistor..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/work-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/work-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/work-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/education-history",
+      "file": "server\\routes.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [
+        {
+          "type": "json",
+          "example": "educationHistory"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = parseInt(req.params.id);\n      const educationHistory = await storage.getUserEducationHistory(userId);\n      res.json(..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/education-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/education-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/education-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/donation-history",
+      "file": "server\\routes.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [
+        {
+          "type": "json",
+          "example": "donationHistory"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = parseInt(req.params.id);\n      const donationHistory = await storage.getUserDonationHistory(userId);\n      res.json(do..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/donation-history",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/donation-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "DELETE",
+      "endpoint": "/api/donation-history/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/testimonials",
+      "file": "server\\routes.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [
+        {
+          "type": "json",
+          "example": "testimonials"
+        }
+      ],
+      "handler": "\n    try {\n      const userId = parseInt(req.params.id);\n      const testimonials = await storage.getUserTestimonials(userId);\n      res.json(testimon..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/testimonials",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/testimonials/:id/report",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/2fa/enable",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/2fa/disable",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/2fa/verify",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/auth/2fa/status",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/notifications",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/notifications",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/notifications/:id/read",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/notifications/read-all",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/appointments",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/appointments",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/appointments/upcoming",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/appointments/:id/status",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/verifications",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/verifications",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/admin/verifications/pending",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PUT",
+      "endpoint": "/api/admin/verifications/:id",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/analytics/admin-dashboard",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/analytics",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/otp/generate",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { phoneNumber, purpose, userId "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/otp/verify",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": "\n    try {\n      const { phoneNumber, verificationId, code, purpose, userId "
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/2fa/enable",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/2fa/disable",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/auth/2fa/verify",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/search/donors",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [
+        {
+          "type": "status",
+          "example": "429"
+        }
+      ],
+      "handler": "\n    try {\n      const clientIP = req.ip || req.connection.remoteAddress || '';\n      \n      // Check search throttling for guest users\n      if (!req..."
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/admin/users",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/admin/emergency-requests",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "PATCH",
+      "endpoint": "/api/admin/users/:id",
+      "file": "server\\routes.ts",
+      "parameters": [
+        "id"
+      ],
+      "responses": [],
+      "handler": "\n    try {\n      const userId = parseInt(req.params.id);\n      const updates = req.body;\n      \n      await storage.updateUser(userId, updates);\n     ..."
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/contact-requests",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/messages",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/emergency-alerts",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/emergency-alerts/:id/respond",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/emergency-alerts/broadcast",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/users/:id/verification",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "GET",
+      "endpoint": "/api/users/:id/verification-status",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    },
+    {
+      "method": "POST",
+      "endpoint": "/api/admin/verifications/:id/approve",
+      "file": "server\\routes.ts",
+      "parameters": [],
+      "responses": [],
+      "handler": ""
+    }
+  ],
+  "frontend": [
+    {
+      "endpoint": "/api/analytics/dashboard",
+      "method": "GET",
+      "file": "client\\src\\components\\AnalyticsDashboard.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/appointments",
+      "method": "GET",
+      "file": "client\\src\\components\\AppointmentScheduler.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/appointments",
+      "method": "GET",
+      "file": "client\\src\\components\\AppointmentScheduler.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/appointments/${appointmentId}/status",
+      "method": "GET",
+      "file": "client\\src\\components\\AppointmentScheduler.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/badges/${userId}",
+      "method": "GET",
+      "file": "client\\src\\components\\BadgeGrid.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/badges/share/${userId}/${badgeId}",
+      "method": "GET",
+      "file": "client\\src\\components\\BadgeGrid.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/profile/${donor.id}/privacy-aware",
+      "method": "GET",
+      "file": "client\\src\\components\\ContactModal.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/statistics",
+      "method": "GET",
+      "file": "client\\src\\components\\ImmersiveHome.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/messages/${userId}",
+      "method": "GET",
+      "file": "client\\src\\components\\MessagingCenter.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/messages/send",
+      "method": "GET",
+      "file": "client\\src\\components\\MessagingCenter.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/messages",
+      "method": "GET",
+      "file": "client\\src\\components\\MessagingModal.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/notifications/${notificationId}/read",
+      "method": "GET",
+      "file": "client\\src\\components\\NotificationCenter.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/notifications/read-all",
+      "method": "GET",
+      "file": "client\\src\\components\\NotificationCenter.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/privacy-settings",
+      "method": "GET",
+      "file": "client\\src\\components\\PrivacySettings.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/privacy-settings",
+      "method": "GET",
+      "file": "client\\src\\components\\PrivacySettings.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/2fa/status",
+      "method": "GET",
+      "file": "client\\src\\components\\TwoFactorAuth.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/2fa/verify",
+      "method": "GET",
+      "file": "client\\src\\components\\TwoFactorAuth.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/2fa/enable",
+      "method": "GET",
+      "file": "client\\src\\components\\TwoFactorAuth.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/2fa/disable",
+      "method": "GET",
+      "file": "client\\src\\components\\TwoFactorAuth.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/check",
+      "method": "GET",
+      "file": "client\\src\\context\\AuthContext.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/logout",
+      "method": "GET",
+      "file": "client\\src\\context\\AuthContext.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/check",
+      "method": "GET",
+      "file": "client\\src\\hooks\\useAuth.js",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/admin/basic-stats",
+      "method": "GET",
+      "file": "client\\src\\hooks\\usePrefetchData.ts",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/admin/donor-metrics",
+      "method": "GET",
+      "file": "client\\src\\hooks\\usePrefetchData.ts",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/admin/donation-metrics",
+      "method": "GET",
+      "file": "client\\src\\hooks\\usePrefetchData.ts",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/admin/emergency-metrics",
+      "method": "GET",
+      "file": "client\\src\\hooks\\usePrefetchData.ts",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/logout",
+      "method": "GET",
+      "file": "client\\src\\pages\\Admin.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/auth/login",
+      "method": "GET",
+      "file": "client\\src\\pages\\AdminLogin.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/users/${numericProfileId}",
+      "method": "GET",
+      "file": "client\\src\\pages\\ProfilePage.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/users/${numericProfileId}/education-history",
+      "method": "GET",
+      "file": "client\\src\\pages\\ProfilePage.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/users/${numericProfileId}/work-history",
+      "method": "GET",
+      "file": "client\\src\\pages\\ProfilePage.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/users/${numericProfileId}/donation-history",
+      "method": "GET",
+      "file": "client\\src\\pages\\ProfilePage.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/users/${numericProfileId}/testimonials",
+      "method": "GET",
+      "file": "client\\src\\pages\\ProfilePage.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/users/${numericProfileId}/social-links",
+      "method": "GET",
+      "file": "client\\src\\pages\\ProfilePage.tsx",
+      "options": {}
+    },
+    {
+      "endpoint": "/api/donors/search?${params}",
+      "method": "GET",
+      "file": "client\\src\\pages\\Search.tsx",
+      "options": {}
+    }
+  ],
+  "recommendations": [
+    "Verify all backend endpoints have corresponding frontend calls",
+    "Add request/response validation schemas",
+    "Implement authentication checks for protected endpoints",
+    "Add error handling for edge cases",
+    "Document rate limiting and throttling policies"
+  ]
+}
