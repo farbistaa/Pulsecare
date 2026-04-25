@@ -1,5 +1,5 @@
 import { eq, and, or, sql, SQL, ilike, desc, gte, lte, count, inArray, like } from "drizzle-orm";
-import { gbrRequests } from "@shared/schema";
+import { gbrRequests, medicalHistory } from "@shared/schema";
 import { MedicalHistory, NewMedicalHistory } from "@shared/schema";
 import {
   users,
@@ -62,6 +62,7 @@ export interface Storage {
   getUserByEmail(email: string): Promise<User | undefined>;
   getUserByPhone(phone: string): Promise<User | undefined>;
   getUserByIdentifier(identifier: string): Promise<User | undefined>;
+  getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
   updateUser(id: number, updates: Partial<User>): Promise<User | undefined>;
   getAllUsers(): Promise<User[]>;
@@ -569,6 +570,16 @@ export class Databasestorage implements Storage {
       throw error;
     }
   }
+
+  async getUserByFirebaseUid(firebaseUid: string): Promise<User | undefined> {
+  try {
+    const [user] = await db.select().from(users).where(eq(users.firebaseUid, firebaseUid));
+    return user || undefined;
+  } catch (error) {
+    console.error("Error in getUserByFirebaseUid:", error);
+    throw error;
+  }
+}
   async createUser(insertUser: InsertUser): Promise<User> {
     try {
       const hashedPassword = await bcrypt.hash(insertUser.password, 10);
@@ -1005,11 +1016,11 @@ async updateWorkHistory(id: number, data: any): Promise<void> {
     const dbData = {
       company: data.company,
       position: data.position,
-      city: data.location, // Translate 'location' to 'city'
+      city: data.city, // Translate 'location' to 'city'
       description: data.description,
       startDate: data.startDate, // Translate 'startDate' to 'startDate'
       endDate: data.endDate, // Translate 'endDate' to 'endDate'
-      isCurrentJob: data.current, // Translate 'current' to 'isCurrentJob'
+      isCurrentJob: data.isCurrentJob, // Translate 'current' to 'isCurrentJob'
     };
 
     await db.update(workHistory)
@@ -1063,27 +1074,27 @@ async addEducationHistory(userId: number, data: InsertEducationHistory): Promise
   }
 }
 
-  async updateEducationHistory(id: number, data: any): Promise<void> {
+async updateEducationHistory(id: number, data: any): Promise<void> {
   try {
-    // Use camelCase keys that match the Drizzle table definition
     const dbData = {
-      institutionName: data.institution, // Translate 'institution' to 'institutionName'
-      course: data.degree, // Translate 'degree' to 'course'
-      institutionType: data.type, // Translate 'type' to 'institutionType'
-      startDate: data.startYear, // Translate 'startYear' to 'startDate'
-      endDate: data.endYear, // Translate 'endYear' to 'endDate'
+      institutionName: data.institutionName,
+      major: data.major,                  // ✅ ADD THIS
+      educationLevel: data.educationLevel,    // ✅ ADD THIS
+      institutionType: data.institutionType || data.type,
+      startDate: data.startDate,
+      endDate: data.endDate,
       description: data.description,
+      // ❌ REMOVE 'course' entirely
     };
 
     await db.update(educationHistory)
-      .set(dbData)
+      .set(dbData)  // Drizzle tries to update 'major' with undefined
       .where(eq(educationHistory.id, id));
   } catch (error) {
     console.error("Error in updateEducationHistory:", error);
     throw error;
   }
 }
-
 
   async deleteEducationHistory(id: number): Promise<void> {
     try {
@@ -1117,7 +1128,7 @@ async addDonationHistory(userId: number, data: InsertDonationHistory): Promise<D
     // Check if donorId is a string and extract the numeric part if needed
     let donorIdValue: number;
     if (typeof user.donorId === 'string') {
-      // Extract numeric part from donorId like "SGDBUSF-2025-0011" -> 11
+      // Extract numeric part from donorId like "SGDBUSF-2026-0011" -> 11
       const match = user.donorId.match(/(\d+)$/);
       if (match) {
         donorIdValue = parseInt(match[1]);
@@ -1175,29 +1186,100 @@ async addDonationHistory(userId: number, data: InsertDonationHistory): Promise<D
       throw error;
     }
   }
+  // In server/storage.ts, inside Databasestorage class
+
   async getUserTestimonials(userId: number): Promise<Testimonial[]> {
     try {
-      console.log("Fetching testimonials for user ID:", userId);
-      // Get the user's donorId first
+      // 1. Fetch the user to get their STRING donorId
       const user = await this.getUser(userId);
       if (!user || !user.donorId) {
-        console.log("User or donorId not found for user ID:", userId);
         return [];
       }
-      
-      // Use double quotes around column names to preserve case sensitivity
-      // The actual column names are 'revieweeId' and 'reviewerId' (camelCase)
-  const result = await db.execute(sql`
-  SELECT * FROM "testimonials" WHERE "revieweeid" = ${user.donorId}
-`);
-      return result.rows as Testimonial[];
+
+      // 2. Use the donorId string to match against revieweeId
+      const result = await db
+        .select()
+        .from(testimonials)
+        .where(eq(testimonials.revieweeId, user.donorId)) // <--- FIX: use user.donorId
+        .orderBy(desc(testimonials.createdAt));
+
+      return result;
     } catch (error) {
       console.error("Error in getUserTestimonials:", error);
       throw error;
     }
   }
- // In storage.ts, update the addTestimonial method
+
+// In server/storage.ts, inside Databasestorage class
+
+async updateTestimonial(id: number, content: string, rating: number, requesterUserId: number): Promise<Testimonial> {
+  try {
+    // 1. Verify ownership
+    const existingTestimonial = await db.query.testimonials.findFirst({
+      where: eq(testimonials.id, id)
+    });
+
+    if (!existingTestimonial) {
+      throw new Error("Testimonial not found");
+    }
+
+    if (existingTestimonial.userId !== requesterUserId) {
+      throw new Error("You are not authorized to edit this testimonial");
+    }
+
+    // 2. Perform update
+    // ✅ FIX: Explicitly cast the result to Testimonial[] to solve 'any' type error
+    const updatedRows = await db
+      .update(testimonials)
+      .set({
+        content: content,
+        rating: rating
+      })
+      .where(eq(testimonials.id, id))
+      .returning() as Testimonial[];
+
+    // 3. Check if update succeeded
+    if (!updatedRows || updatedRows.length === 0) {
+      throw new Error("Update failed: No rows were modified.");
+    }
+
+    return updatedRows[0];
+  } catch (error) {
+    console.error("Error in updateTestimonial:", error);
+    throw error;
+  }
+}
+
+async deleteTestimonial(id: number, requesterUserId: number): Promise<boolean> {
+  try {
+    // 1. Verify ownership
+    // ✅ FIX: Remove brackets []. findFirst returns a single object.
+    const existingTestimonial = await db.query.testimonials.findFirst({
+      where: eq(testimonials.id, id)
+    });
+
+    if (!existingTestimonial) {
+      throw new Error("Testimonial not found");
+    }
+
+    if (existingTestimonial.userId !== requesterUserId) {
+      throw new Error("You are not authorized to delete this testimonial");
+    }
+
+    // 2. Delete
+    const result = await db
+      .delete(testimonials)
+      .where(eq(testimonials.id, id));
+
+    return (result.rowCount ?? 0) > 0;
+  } catch (error) {
+    console.error("Error in deleteTestimonial:", error);
+    throw error;
+  }
+}
+
 async addTestimonial(data: {
+  userId?: number; // <-- Add this optional parameter
   reviewerId: string;
   revieweeId: string;
   content: string;
@@ -1220,16 +1302,22 @@ async addTestimonial(data: {
     if (!data.rating || data.rating < 1 || data.rating > 5) {
       throw new Error("Rating must be between 1 and 5");
     }
+
+    // We need a numeric 'userId' for the database column 'user_id'.
+    // If it wasn't passed in the data object, we MUST look it up or handle it.
+    // In this implementation, we expect routes.ts to pass it.
     
-    // Convert string IDs to numbers if needed
-    const reviewerIdNum = typeof data.reviewerId === 'string' ? parseInt(data.reviewerId) : data.reviewerId;
-    const revieweeIdNum = typeof data.revieweeId === 'string' ? parseInt(data.revieweeId) : data.revieweeId;
+    const userIdToInsert = data.userId;
+
+    if (!userIdToInsert) {
+      throw new Error("Numeric User ID is required for testimonials");
+    }
     
     const [newTestimonial] = await db.insert(testimonials)
       .values({
-        userId: reviewerIdNum, // Use userId instead of reviewerId
-        reviewerId: data.reviewerId,
-        revieweeId: data.revieweeId,
+        userId: userIdToInsert, // Use the numeric ID passed from req.user.id
+        reviewerId: data.reviewerId, // Use the string donorId
+        revieweeId: data.revieweeId, // Use the string donorId
         content: data.content,
         rating: data.rating,
         isReported: false
@@ -1242,6 +1330,7 @@ async addTestimonial(data: {
     throw error;
   }
 }
+
   async reportTestimonial(id: number): Promise<void> {
     try {
       // Use double quotes around column names to preserve case sensitivity
@@ -1278,7 +1367,7 @@ async createMedicalHistory(data: NewMedicalHistory): Promise<MedicalHistory> {
   try {
     const result = await db.execute(sql`
       INSERT INTO medical_history (
-        "donor_id", 
+        "donorId", 
         "major_conditions", 
         "systolic", 
         "diastolic", 
@@ -1317,115 +1406,55 @@ async createMedicalHistory(data: NewMedicalHistory): Promise<MedicalHistory> {
   }
 }
 
-// In storage.ts, update the updateMedicalHistory method
 async updateMedicalHistory(donorId: string, data: Partial<NewMedicalHistory>): Promise<MedicalHistory> {
   try {
-    // First check if record exists
     const existingRecord = await this.getMedicalHistoryByDonorId(donorId);
     
     if (!existingRecord) {
-      // If no record exists, create a new one
       return this.createMedicalHistory({
         donorId,
         ...data
       } as NewMedicalHistory);
     }
     
-    // Build the update query with proper parameter handling
-    const updateFields = [];
-    const values = [];
-    let paramIndex = 1;
+    // Build update data - FIXING SKIPPING LOGIC
+    const updateData: Record<string, any> = {};
     
-    if (data.healthStatus !== undefined) {
-      updateFields.push(`"health_status" = $${paramIndex}`);
-      values.push(data.healthStatus);
-      paramIndex++;
+    // ✅ FIX: Iterate over all known fields explicitly
+    // This ensures that if a field is 'undefined', we explicitly handle it (e.g., set to null)
+    // instead of skipping it.
+    const fields = [
+      'healthStatus', 'systolic', 'diastolic', 'lastChecked',
+      'chronicConditions', 'vaccinations', 'smokingStatus', 
+      'alcoholConsumption', 'drugUse', 'allergies', 'currentMedications', 'importantNotes'
+    ];
+
+    fields.forEach(field => {
+      const value = (data as any)[field];
+      if (value !== undefined) {
+        updateData[field] = value;
+      }
+    });
+
+    // ✅ FIX: Use Drizzle ORM update method (Type-Safe)
+    // Note: Ensure you import 'medicalHistory' table properly if not already in scope.
+    // Assuming 'medicalHistory' is imported from schema.
+    const [updatedHistory] = await db
+      .update(medicalHistory)
+      .set(updateData)
+      .where(eq(medicalHistory.donorId, donorId))
+      .returning();
+
+    if (!updatedHistory) {
+      throw new Error("Update failed: No rows returned");
     }
+
+    console.log("Medical history updated successfully");
+    return updatedHistory;
     
-    if (data.systolic !== undefined) {
-      updateFields.push(`"systolic" = $${paramIndex}`);
-      values.push(data.systolic);
-      paramIndex++;
-    }
-    
-    if (data.diastolic !== undefined) {
-      updateFields.push(`"diastolic" = $${paramIndex}`);
-      values.push(data.diastolic);
-      paramIndex++;
-    }
-    
-    if (data.lastChecked !== undefined) {
-      updateFields.push(`"last_checked" = $${paramIndex}`);
-      values.push(data.lastChecked);
-      paramIndex++;
-    }
-    
-    if (data.chronicConditions !== undefined) {
-      updateFields.push(`"chronic_conditions" = $${paramIndex}`);
-      values.push(JSON.stringify(data.chronicConditions));
-      paramIndex++;
-    }
-    
-    if (data.vaccinations !== undefined) {
-      updateFields.push(`"vaccinations" = $${paramIndex}`);
-      values.push(JSON.stringify(data.vaccinations));
-      paramIndex++;
-    }
-    
-    if (data.smokingStatus !== undefined) {
-      updateFields.push(`"smoking_status" = $${paramIndex}`);
-      values.push(data.smokingStatus);
-      paramIndex++;
-    }
-    
-    if (data.alcoholConsumption !== undefined) {
-      updateFields.push(`"alcohol_consumption" = $${paramIndex}`);
-      values.push(data.alcoholConsumption);
-      paramIndex++;
-    }
-    
-    if (data.drugUse !== undefined) {
-      updateFields.push(`"drug_use" = $${paramIndex}`);
-      values.push(data.drugUse);
-      paramIndex++;
-    }
-    
-    if (data.allergies !== undefined) {
-      updateFields.push(`"allergies" = $${paramIndex}`);
-      values.push(JSON.stringify(data.allergies));
-      paramIndex++;
-    }
-    
-    if (data.currentMedications !== undefined) {
-      updateFields.push(`"current_medications" = $${paramIndex}`);
-      values.push(JSON.stringify(data.currentMedications));
-      paramIndex++;
-    }
-    
-    if (data.importantNotes !== undefined) {
-      updateFields.push(`"important_notes" = $${paramIndex}`);
-      values.push(data.importantNotes);
-      paramIndex++;
-    }
-    
-    // Always update the updated_at timestamp
-    updateFields.push(`"updated_at" = CURRENT_TIMESTAMP`);
-    
-    // Add donorId as the last parameter
-    values.push(donorId);
-    
-    // Create a proper SQL template with the correct number of parameters
-    const result = await db.execute(
-      sql`UPDATE medical_history
-        SET ${sql.raw(updateFields.join(', '))}
-        WHERE "donor_id" = ${donorId}
-        RETURNING *`
-    );
-    
-    return result.rows[0] as MedicalHistory;
   } catch (error) {
     console.error("Error in updateMedicalHistory:", error);
-    throw error;
+    throw error; // Re-throw to ensure routes.ts handles it correctly
   }
 }
   async createDonation(donation: InsertBloodDonation): Promise<BloodDonation> {
@@ -4681,7 +4710,6 @@ async updateMedicalHistory(donorId: string, data: Partial<NewMedicalHistory>): P
       throw error;
     }
   }
-  // Add these methods to your DatabaseStorage class in storage.ts
 
   async getDonorAvailabilityWithPagination(filters?: {
     bloodGroup?: string;

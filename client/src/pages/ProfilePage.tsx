@@ -1,4 +1,4 @@
-import { useParams } from "wouter";
+import { useParams, Link } from "wouter";
 import { useAuth } from "@/context/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCallback, useEffect, useState, useRef } from "react";
@@ -81,6 +81,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import Loader from "@/components/ui/Loader"; // ✅ IMPORTED LOADER
 
 // Define the ProfilePageProps interface
 interface ProfilePageProps {
@@ -231,6 +232,7 @@ function ProfilePage({
   const params = useParams<{ id?: string }>();
   const { toast: uiToast } = useToast();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [initialValues, setInitialValues] = useState({});
   const [isVerificationModalOpen, setIsVerificationModalOpen] = useState(false);
   const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(null);
   const [profilePhotoPreview, setProfilePhotoPreview] = useState<string | null>(null);
@@ -256,8 +258,12 @@ function ProfilePage({
   const [editingDonationId, setEditingDonationId] = useState<string | null>(null);
   const [isAddingTestimonial, setIsAddingTestimonial] = useState(false);
   const [testimonialContent, setTestimonialContent] = useState("");
-  const [testimonialRating, setTestimonialRating] = useState(5);
+  const [testimonialRating, setTestimonialRating] = useState(1);
   const [isSubmittingTestimonial, setIsSubmittingTestimonial] = useState(false);
+  const [testimonialError, setTestimonialError] = useState<string | null>(null);
+  const [isEditingTestimonial, setIsEditingTestimonial] = useState(false);
+  const [editingTestimonial, setEditingTestimonial] = useState<any>(null);
+  const [isDeletingTestimonial, setIsDeletingTestimonial] = useState(false);
   
   // State for managing data
   const [profileData, setProfileData] = useState<any>(null);
@@ -371,9 +377,39 @@ function ProfilePage({
   });
   
   const profileId = params.id;
-  const isOwnProfile = propIsOwnProfile !== undefined ? propIsOwnProfile : (!profileId || (user && parseInt(profileId) === user.id) || false);
-  const numericProfileId = profileId ? parseInt(profileId) : (user ? user.id : null);
+  if (!profileId && user && !user.id) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50 flex items-center justify-center p-4">
+        <div className="bg-white p-8 rounded-3xl shadow-xl max-w-md w-full text-center border border-red-100">
+          <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <AlertTriangle className="w-8 h-8 text-red-600" />
+          </div>
+          <h3 className="text-2xl font-bold text-gray-900 mb-2">Session Incomplete</h3>
+          <p className="text-gray-600 mb-6">
+            You are logged in, but your account ID is missing from the session. This usually happens after updates to the authentication system.
+          </p>
+          <button
+            onClick={() => {
+                // Force logout logic or simple redirect to login
+                window.location.href = '/login';
+            }}
+            className="w-full py-3 px-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition-colors shadow-lg shadow-indigo-200"
+          >
+            Log In Again
+          </button>
+        </div>
+      </div>
+    );
+  }
   
+const isOwnProfile = propIsOwnProfile !== undefined ? propIsOwnProfile : (!profileId || (user && parseInt(profileId) === Number(user.id)) || false);
+const numericProfileId = profileId ? parseInt(profileId) : (user ? user.id : null);
+    console.log("Auth Debug:", { 
+      isLoggedIn: !!user, 
+      userId: user?.id, 
+      profileIdFromUrl: profileId, 
+      finalNumericId: numericProfileId 
+  });
   // Fetch profile data from API
   const fetchProfileData = useCallback(async () => {
     if (!numericProfileId) return;
@@ -393,8 +429,8 @@ function ProfilePage({
       // Update form with fetched data
       const availability = data.user.isAvailable !== undefined ? data.user.isAvailable : true;
       setIsAvailable(availability);
-      
-      setEditForm({
+    
+      const formValues = {
         fullName: data.user.fullName || data.user.name || "",
         bio: data.user.bio || "",
         email: data.user.email || "",
@@ -425,7 +461,13 @@ function ProfilePage({
         smoking: "",
         alcohol: "",
         drugUse: ""
-      });
+      };
+
+      // 2. Update the Edit Form (Existing)
+      setEditForm(formValues);
+
+      // 3. UPDATE: Set Initial Values to match Edit Form (NEW)
+      setInitialValues(formValues);
       
       setCoverPhotoPreview(data.user.coverPhoto || null);
       setProfilePhotoPreview(data.user.profilePicture || null);
@@ -438,34 +480,46 @@ function ProfilePage({
   }, [numericProfileId]);
   
   // Fetch education data
+// In ProfilePage.tsx
   const fetchEducationData = useCallback(async () => {
     if (!numericProfileId) return;
     
     setIsEducationLoading(true);
     
     try {
-      const response = await fetch(`/api/users/${numericProfileId}/education-history`);
+      // Ensure we are fetching the correct user's ID (Handle viewing own profile vs others)
+      const targetId = numericProfileId || (user?.id);
+      
+      const response = await fetch(`/api/users/${targetId}/education-history`);
+      
       if (!response.ok) {
         throw new Error('Failed to fetch education data');
       }
       
       const data = await response.json();
-      // --- SORTING LOGIC START ---
+      
+      // ✅ FIX: Robust Sorting Logic
+      // If dates are undefined/invalid, treat them as very old so they fall to bottom
       const sortedEducation = (data || []).sort((a: any, b: any) => {
-        // Prefer End Date, fallback to Start Date
-        const dateA = new Date(a.endDate || a.startYear);
-        const dateB = new Date(b.endDate || b.startYear);
-        return dateB.getTime() - dateA.getTime();
+        const dateA = (a.endDate || a.startDate || a.startYear) 
+          ? new Date(a.endDate || a.startDate || a.startYear).getTime() 
+          : new Date(0).getTime();
+          
+        const dateB = (b.endDate || b.startDate || b.startYear) 
+          ? new Date(b.endDate || b.startDate || b.startYear).getTime() 
+          : new Date(0).getTime();
+          
+        return dateB - dateA; // Descending (Newest first)
       });
-      // --- SORTING LOGIC END ---
-      setEducationData(data);
+      
+      setEducationData(sortedEducation);
     } catch (error) {
       console.error('Error fetching education data:', error);
       toast.error('Failed to load education data');
     } finally {
       setIsEducationLoading(false);
     }
-  }, [numericProfileId]);
+  }, [numericProfileId, user?.id]); // Add user?.id to dependencies
   
   // Fetch work data
   const fetchWorkData = useCallback(async () => {
@@ -536,26 +590,35 @@ function ProfilePage({
   }, [numericProfileId]);
   
   // Fetch testimonials data
-  const fetchTestimonialsData = useCallback(async () => {
-    if (!numericProfileId) return;
-    
-    setIsTestimonialsLoading(true);
-    
-    try {
-      const response = await fetch(`/api/users/${numericProfileId}/testimonials`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch testimonials');
-      }
-      
-      const data = await response.json();
-      setTestimonialsData(data);
-    } catch (error) {
-      console.error('Error fetching testimonials:', error);
-      toast.error('Failed to load testimonials');
-    } finally {
-      setIsTestimonialsLoading(false);
+const fetchTestimonialsData = useCallback(async () => {
+  if (!numericProfileId) return;
+  
+  setIsTestimonialsLoading(true);
+  
+  try {
+    const response = await fetch(`/api/users/${numericProfileId}/testimonials`);
+    if (!response.ok) {
+      throw new Error('Failed to fetch testimonials');
     }
-  }, [numericProfileId]);
+    
+    const data = await response.json();
+    
+    // ✅ FIX: Map the data to ensure the 'author' field exists
+    // Assuming the API returns a 'User' object with a 'name' or 'fullName' property
+    const formattedData = data.map((t: any) => ({
+      ...t,
+      // If 'author' is missing, try to get it from a nested 'User' object
+      author: t.author || t.User?.name || t.User?.fullName || t.reviewerName || 'Anonymous'
+    }));
+    
+    setTestimonialsData(formattedData);
+  } catch (error) {
+    console.error('Error fetching testimonials:', error);
+    toast.error('Failed to load testimonials');
+  } finally {
+    setIsTestimonialsLoading(false);
+  }
+}, [numericProfileId]);
   
   // Fetch medical history data
 const fetchMedicalHistoryData = useCallback(async () => {
@@ -796,55 +859,63 @@ useEffect(() => {
   };
 
   // In ProfilePage.tsx, update the handleSaveMedicalHistory function
-const handleSaveMedicalHistory = async () => {
+// ✅ FIXED CODE
+const handleSaveMedicalHistory = async (values: MedicalHistoryFormValues) => {
   if (!isOwnProfile) return;
   
   try {
     // Get the user's donorId
-    const user = await fetch(`/api/users/${numericProfileId}`).then(res => res.json());
-    const donorId = user.user.donorId;
+    const userResponse = await fetch(`/api/users/${numericProfileId}`);
+    const userData = await userResponse.json();
+    const donorId = userData.user.donorId;
     
+    // Construct the payload using the 'values' argument (which comes from the form)
+    // instead of the 'medicalHistoryForm' state variable.
+    const payload = {
+      donorId: donorId,
+      healthStatus: values.healthStatus,
+      systolic: parseInt(values.bloodPressureSystolic || "0"),
+      diastolic: parseInt(values.bloodPressureDiastolic || "0"),
+      chronicConditions: values.chronicConditions ? values.chronicConditions.split(',').map(item => item.trim()) : [],
+      vaccinations: values.vaccinationType ? values.vaccinationType.split(',').map(item => item.trim()) : [],
+      lastChecked: values.vaccinationDate ? new Date(values.vaccinationDate) : new Date(),
+      smokingStatus: values.smoking || "never",
+      alcoholConsumption: values.alcohol || "never",
+      drugUse: values.drugUse || "never",
+      allergies: values.allergies ? values.allergies.split(',').map(item => item.trim()) : [],
+      currentMedications: values.medications ? values.medications.split(',').map(item => item.trim()) : [],
+      importantNotes: values.notes
+    };
+
+    console.log("Sending payload:", payload); // Debugging log to verify data
+
     const response = await fetch('/api/medical-history', {
-      method: 'GET',
-      headers: {
+      method: 'POST',
+      headers: { 
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        donorId: donorId,
-        healthStatus: medicalHistoryForm.healthStatus,
-        systolic: parseInt(medicalHistoryForm.bloodPressureSystolic || "0"),
-        diastolic: parseInt(medicalHistoryForm.bloodPressureDiastolic || "0"),
-        chronicConditions: medicalHistoryForm.chronicConditions ? medicalHistoryForm.chronicConditions.split(',').map(item => item.trim()) : [],
-        vaccinations: medicalHistoryForm.vaccinationType ? medicalHistoryForm.vaccinationType.split(',').map(item => item.trim()) : [],
-        lastChecked: medicalHistoryForm.vaccinationDate ? new Date(medicalHistoryForm.vaccinationDate) : new Date(),
-        smokingStatus: medicalHistoryForm.smoking || "never",
-        alcoholConsumption: medicalHistoryForm.alcohol || "never",
-        drugUse: medicalHistoryForm.drugUse || "never",
-        allergies: medicalHistoryForm.allergies ? medicalHistoryForm.allergies.split(',').map(item => item.trim()) : [],
-        currentMedications: medicalHistoryForm.medications ? medicalHistoryForm.medications.split(',').map(item => item.trim()) : [],
-        importantNotes: medicalHistoryForm.notes
-      }),
+      body: JSON.stringify(payload),
     });
     
     if (!response.ok) {
       throw new Error('Failed to update medical history');
     }
     
-    // Update local state
+    // Update local state using the 'values' passed in
     setMedicalHistoryData((prev: any) => ({
       ...prev,
-      healthStatus: medicalHistoryForm.healthStatus,
-      systolic: parseInt(medicalHistoryForm.bloodPressureSystolic || "0"),
-      diastolic: parseInt(medicalHistoryForm.bloodPressureDiastolic || "0"),
-      chronicConditions: medicalHistoryForm.chronicConditions ? medicalHistoryForm.chronicConditions.split(',').map(item => item.trim()) : [],
-      vaccinations: medicalHistoryForm.vaccinationType ? medicalHistoryForm.vaccinationType.split(',').map(item => item.trim()) : [],
-      lastChecked: medicalHistoryForm.vaccinationDate ? new Date(medicalHistoryForm.vaccinationDate) : new Date(),
-      smokingStatus: medicalHistoryForm.smoking || "never",
-      alcoholConsumption: medicalHistoryForm.alcohol || "never",
-      drugUse: medicalHistoryForm.drugUse || "never",
-      allergies: medicalHistoryForm.allergies ? medicalHistoryForm.allergies.split(',').map(item => item.trim()) : [],
-      currentMedications: medicalHistoryForm.medications ? medicalHistoryForm.medications.split(',').map(item => item.trim()) : [],
-      importantNotes: medicalHistoryForm.notes
+      healthStatus: values.healthStatus,
+      systolic: parseInt(values.bloodPressureSystolic || "0"),
+      diastolic: parseInt(values.bloodPressureDiastolic || "0"),
+      chronicConditions: values.chronicConditions ? values.chronicConditions.split(',').map(item => item.trim()) : [],
+      vaccinations: values.vaccinationType ? values.vaccinationType.split(',').map(item => item.trim()) : [],
+      lastChecked: values.vaccinationDate ? new Date(values.vaccinationDate) : new Date(),
+      smokingStatus: values.smoking || "never",
+      alcoholConsumption: values.alcohol || "never",
+      drugUse: values.drugUse || "never",
+      allergies: values.allergies ? values.allergies.split(',').map(item => item.trim()) : [],
+      currentMedications: values.medications ? values.medications.split(',').map(item => item.trim()) : [],
+      importantNotes: values.notes
     }));
     
     uiToast({
@@ -857,7 +928,6 @@ const handleSaveMedicalHistory = async () => {
     toast.error('Failed to update medical history');
   }
 };
-
   const handleToggleAvailability = async (checked: boolean) => {
     if (!isOwnProfile) return;
     
@@ -894,17 +964,28 @@ const handleSaveMedicalHistory = async () => {
     }
   };
 
-  // In ProfilePage.tsx, update the handleTestimonialSubmit function
-const handleTestimonialSubmit = async (e: React.FormEvent) => {
+ const handleTestimonialSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   
+  // Reset previous error
+  setTestimonialError(null);
+
   if (isOwnProfile) {
     toast.error("You cannot add a testimonial to your own profile");
     return;
   }
   
-  if (!testimonialContent.trim()) {
-    toast.error("Please enter a testimonial");
+  const trimmedContent = testimonialContent.trim();
+
+  // Check if empty
+  if (!trimmedContent) {
+    setTestimonialError("You must enter your testimonial/review");
+    return;
+  }
+
+  // Check if less than 5 characters
+  if (trimmedContent.length < 5) {
+    setTestimonialError("You must enter at least 5 characters.");
     return;
   }
   
@@ -936,16 +1017,16 @@ const handleTestimonialSubmit = async (e: React.FormEvent) => {
     }
     
     const response = await fetch('/api/testimonials', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify({
-    revieweeId: recipientDonorId, // Backend expects revieweeId
-    content: testimonialContent,
-    rating: testimonialRating
-  }),
-});
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        revieweeId: recipientDonorId,
+        content: trimmedContent,
+        rating: testimonialRating
+      }),
+    });
     
     if (!response.ok) {
       throw new Error('Failed to submit testimonial');
@@ -969,107 +1050,247 @@ const handleTestimonialSubmit = async (e: React.FormEvent) => {
     setIsSubmittingTestimonial(false);
   }
 };
-// In ProfilePage.tsx, update the handleAddEducation function
+
+  // Delete Testimonial Handler
+  const handleDeleteTestimonial = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this testimonial? This action cannot be undone.")) {
+      return;
+    }
+
+    setIsDeletingTestimonial(true);
+
+    try {
+      const response = await fetch(`/api/testimonials/${id}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to delete testimonial');
+      }
+
+      uiToast({
+        title: "Testimonial deleted",
+        description: "Your testimonial has been removed successfully.",
+      });
+
+      // Refresh the list to remove the deleted item
+      await fetchTestimonialsData();
+    } catch (error) {
+      console.error("Error deleting testimonial:", error);
+      uiToast({
+        title: "Error",
+        description: "Failed to delete testimonial.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsDeletingTestimonial(false);
+    }
+  };
+
+// In ProfilePage.tsx
+
+  const handleEditTestimonialClick = (testimonial: any) => {
+    // 1. Safety Check: Ensure testimonial exists and has an ID
+    if (!testimonial || !testimonial.id) {
+      console.error("Attempted to edit testimonial without ID", testimonial);
+      uiToast({
+        title: "Error",
+        description: "Cannot edit testimonial: Testimonial data is missing.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    // 2. Set state to open modal
+    setEditingTestimonial(testimonial);
+    setIsEditingTestimonial(true);
+  };
+
+  const handleUpdateTestimonial = async () => {
+    // 1. Guard clause
+    if (!editingTestimonial || !editingTestimonial.id) return;
+
+    try {
+      // 2. Call API to update
+      const response = await fetch(`/api/testimonials/${editingTestimonial.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          content: editingTestimonial.content,
+          rating: editingTestimonial.rating,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update testimonial');
+      }
+
+      // 3. Success feedback
+      uiToast({
+        title: "Testimonial updated",
+        description: "Your testimonial has been successfully updated.",
+      });
+
+      // 4. Close modal and reset state
+      setIsEditingTestimonial(false);
+      setEditingTestimonial(null);
+
+      // 5. Refresh data to show changes immediately
+      await fetchTestimonialsData(); 
+      
+    } catch (error) {
+      console.error("Error updating testimonial:", error);
+      uiToast({
+        title: "Error",
+        description: "Failed to update testimonial.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  // Report Testimonial Handler
+  const handleReportTestimonial = async (id: number) => {
+    if (!window.confirm("Are you sure you want to report this testimonial to the admin?")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/testimonials/${id}/report`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to report testimonial');
+      }
+
+      uiToast({
+        title: "Report Submitted",
+        description: "This testimonial has been reported to the admin for review.",
+      });
+      
+      // Optional: Hide the reported testimonial from view locally until refresh
+      setTestimonialsData((prev: any[]) => prev.map((t: any) => t.id === id ? { ...t, isReported: true } : t));
+      
+    } catch (error) {
+      console.error("Error reporting testimonial:", error);
+      uiToast({
+        title: "Error",
+        description: "Failed to report testimonial.",
+        variant: "destructive"
+      });
+    }
+  };
+
 const handleAddEducation = async (values: z.infer<typeof educationSchema>) => {
   if (!isOwnProfile || !numericProfileId) return;
-  
+
   try {
-    // Transform data to match backend schema
-const transformedData = {
-  institutionName: values.institution, // Backend expects institutionName
-  educationLevel: values.type, // Backend expects educationLevel
-  major: values.degree, // Backend expects major
-  institutionType: values.type, // Backend expects institutionType
-  startDate: values.startYear, // Backend expects startDate
-  endDate: values.endYear, // Backend expects endDate
-  description: values.description,
-  isGraduated: !!values.endYear
-};
+    const transformedData = {
+      institutionName: values.institution,
+      major: values.degree,
+      educationLevel: values.type, 
+      institutionType: values.type,
+      startDate: values.startYear,
+      endDate: values.endYear,
+      description: values.description,
+      isGraduated: !!values.endYear,
+    };
 
     const response = await fetch(`/api/profile/education`, {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(transformedData),
-});
-    
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(transformedData),
+    });
+
     if (!response.ok) {
-      throw new Error('Failed to add education');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to add education');
     }
-    
-    const newEducation = await response.json();
-    setEducationData((prev: any[]) => [...prev, newEducation]);
-    
+
+    // ✅ FIX: Refetch data to ensure correct sorting and state
+    await fetchEducationData();
+
     uiToast({
       title: "Education added",
       description: "Your education has been successfully added.",
     });
+
     setIsAddingEducation(false);
     educationForm.reset();
-  } catch (error) {
+
+  } catch (error: any) {
     console.error('Error adding education:', error);
-    toast.error('Failed to add education');
+    toast.error(error.message || 'Failed to add education history');
+    setIsAddingEducation(false);
   }
 };
 
- const handleEditEducation = (education: any) => {
-  setEditingEducationId(education.id);
-  educationForm.reset({
-    degree: education.major || education.degree || "", // Backend returns major
-    institution: education.institutionName || education.institution || "",
-    startYear: education.startDate || education.startYear || "",
-    endYear: education.endDate || education.endYear || "",
-    type: education.educationLevel || education.type || "",
-    description: education.description || "",
-  });
-};
-
-
-  const handleUpdateEducation = async (values: z.infer<typeof educationSchema>) => {
-    if (!isOwnProfile || !editingEducationId) return;
+  // In ProfilePage.tsx
+  // Add this function to handle opening the edit modal
+  const handleEditEducation = (education: any) => {
+    setEditingEducationId(education.id);
     
-    try {
-  const transformedData = {
-  institutionName: values.institution, // Backend expects institutionName
-  educationLevel: values.type, // Backend expects educationLevel
-  major: values.degree, // Backend expects major
-  institutionType: values.type, // Backend expects institutionType
-  startDate: values.startYear, // Backend expects startDate
-  endDate: values.endYear, // Backend expects endDate
-  description: values.description,
-  isGraduated: !!values.endYear
-};
-
-  const response = await fetch(`/api/profile/education/${editingEducationId}`, {
-  method: 'PUT',
-  headers: {
-    'Content-Type': 'application/json',
-  },
-  body: JSON.stringify(transformedData),
-});
-
-      
-      if (!response.ok) {
-        throw new Error('Failed to update education');
-      }
-      
-      setEducationData((prev: any[]) => prev.map(edu => 
-        edu.id === editingEducationId 
-          ? { ...edu, ...transformedData }
-          : edu
-      ));
-      
-      uiToast({
-        title: "Education updated",
-        description: "Your education has been successfully updated.",
-      });
-      setEditingEducationId(null);
-    } catch (error) {
-      console.error('Error updating education:', error);
-      toast.error('Failed to update education');
-    }
+    // Reset the form with the existing data
+    // We map backend snake_case keys to frontend camelCase form fields
+    educationForm.reset({
+      degree: education.major || education.degree || "", // DB uses 'major', Form uses 'degree'
+      institution: education.institutionName || education.institution || "", // DB uses 'institutionName'
+      startYear: education.startDate || education.startDate || "", // DB uses 'startDate'
+      endYear: education.endDate || education.endYDate || "", // DB uses 'endDate'
+      type: education.educationLevel || education.institutionType || "", // DB uses 'educationLevel'
+      description: education.description || "",
+    });
   };
+
+  // In ProfilePage.tsx
+const handleUpdateEducation = async (values: z.infer<typeof educationSchema>) => {
+  if (!isOwnProfile || !editingEducationId) return;
+
+  try {
+    const transformedData = {
+      institutionName: values.institution,
+      major: values.degree,
+      educationLevel: values.type, 
+      institutionType: values.type,
+      startDate: values.startYear,
+      endDate: values.endYear,
+      description: values.description,
+      isGraduated: !!values.endYear,
+    };
+
+    const response = await fetch(`/api/profile/education/${editingEducationId}`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(transformedData),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update education');
+    }
+
+    await fetchEducationData();
+
+    uiToast({
+      title: "Education updated",
+      description: "Your education has been successfully updated.",
+    });
+
+    setEditingEducationId(null);
+
+  } catch (error: any) {
+    console.error('Error updating education:', error);
+    toast.error(error.message || 'Failed to update education history');
+    setEditingEducationId(null);
+  }
+  
+};
 
   const handleDeleteEducation = async (id: string) => {
     if (!isOwnProfile) return;
@@ -1351,12 +1572,7 @@ const transformedData = {
 
   if (isProfileLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50">
-        <div className="flex flex-col items-center space-y-4">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-          <p className="text-gray-600 font-medium">Loading profile...</p>
-        </div>
-      </div>
+      <Loader fullPage loading={true} text="Loading profile..." color="#ff0000" size={60} />
     );
   }
 
@@ -1517,7 +1733,7 @@ const transformedData = {
                     </h1>
                     {isOwnProfile && (
                       <p className="text-gray-500 text-sm mt-1 font-medium">
-                        Donor ID: {profileData.donorId || `BDMS-2025-${String(profileData.id || 0).padStart(4, '0')}`}
+                        Donor ID: {profileData.donorId || `BDMS-2026-${String(profileData.id || 0).padStart(4, '0')}`}
                       </p>
                     )}
                     <p className="text-gray-600 mt-2 flex items-center justify-center gap-2">
@@ -1829,9 +2045,7 @@ const transformedData = {
                   >
                     <CardContent className="pt-0">
                       {isMedicalHistoryLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                        </div>
+                        <Loader loading={true} size={30} color="#22c55e" className="py-8" />
                       ) : isEditingMedicalHistory ? (
                         <Form {...medicalHistoryFormValidation}>
                           <form onSubmit={medicalHistoryFormValidation.handleSubmit(handleSaveMedicalHistory)} className="space-y-4">
@@ -2311,9 +2525,7 @@ const transformedData = {
                   >
                     <CardContent className="pt-0">
                       {isWorkLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
-                        </div>
+                        <Loader loading={true} size={30} color="#3b82f6" className="py-8" />
                       ) : displayWork && displayWork.length > 0 ? (
                         <div className="space-y-6">
                           {displayWork.map((work: any, index: number) => (
@@ -2425,9 +2637,7 @@ const transformedData = {
                   >
                     <CardContent className="pt-0">
                       {isEducationLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-500"></div>
-                        </div>
+                        <Loader loading={true} size={30} color="#22c55e" className="py-8" />
                       ) : displayEducation && displayEducation.length > 0 ? (
                         <div className="space-y-6">
                           {displayEducation.map((edu: any, index: number) => (
@@ -2539,9 +2749,7 @@ const transformedData = {
                   >
                     <CardContent className="pt-0">
                       {isDonationLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-500"></div>
-                        </div>
+                        <Loader loading={true} size={30} color="#ef4444" className="py-8" />
                       ) : displayDonationHistory && displayDonationHistory.length > 0 ? (
                         <div className="relative">
                           <div className="absolute left-6 top-0 bottom-0 w-1 bg-gradient-to-b from-red-500 to-pink-500 rounded-full"></div>
@@ -2620,6 +2828,7 @@ const transformedData = {
             </Card>
 
             {/* Testimonials */}
+            {/* Testimonials */}
             <Card className="shadow-xl border-0 overflow-hidden bg-white/90 backdrop-blur-sm">
               <div className="h-2 bg-gradient-to-r from-purple-500 to-pink-500"></div>
               <CardHeader className="pb-3">
@@ -2648,33 +2857,117 @@ const transformedData = {
                   >
                     <CardContent className="pt-0">
                       {isTestimonialsLoading ? (
-                        <div className="flex items-center justify-center py-8">
-                          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500"></div>
-                        </div>
-                      ) : displayTestimonials && displayTestimonials.length > 0 ? (
-                        <div className="space-y-4">
-                          {displayTestimonials.map((testimonial: any, index: number) => (
-                            <div key={index} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:shadow-md transition-all duration-300">
-                              <div className="flex items-start gap-4">
-                                <div className="p-3 bg-white rounded-full shadow-md">
-                                  <Star className="w-6 h-6 text-yellow-500" />
+                        <Loader loading={true} size={30} color="#a855f7" className="py-8" />
+                      ) : displayTestimonials && displayTestimonials.map((testimonial: any, index: number) => {
+                        
+                        // LOGIC CHECKS
+                        const isAuthor = user?.id === testimonial.userId;
+                        const isRecipient = isOwnProfile && !isAuthor;
+
+                        return (
+                          // CARD CONTAINER - Using Flexbox layout instead of Absolute positioning
+                          <div key={index} className="p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-xl hover:shadow-md transition-all duration-300">
+                            
+                            <div className="flex items-start gap-4">
+                              {/* ICON */}
+                              <div className="p-3 bg-white rounded-full shadow-md z-10 shrink-0">
+                                <Star className="w-6 h-6 text-red-500" />
+                              </div>
+                              
+                              {/* MAIN CONTENT AREA */}
+                              <div className="flex-1 flex flex-col gap-2">
+                                
+                                {/* TOP ROW: Quote & Actions */}
+                                <div className="flex justify-between items-start gap-2">
+                                  <p className="text-gray-700 italic text-lg flex-1 break-words">"{testimonial.content}"</p>
+                                  
+                                  {/* ACTION BUTTONS */}
+                                  <div className="flex items-center gap-2 shrink-0">
+                                    
+                                    {/* CASE A: EDIT/DELETE */}
+                                    {isAuthor && (
+                                      <div className="flex gap-2">
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleEditTestimonialClick(testimonial)}
+                                          className="h-8 w-8 p-0 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+                                        >
+                                          <Edit className="w-4 h-4" />
+                                        </Button>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={() => handleDeleteTestimonial(testimonial.id)}
+                                          className="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                        >
+                                          <Trash2 className="w-4 h-4" />
+                                        </Button>
+                                      </div>
+                                    )}
+
+                                    {/* CASE B: REPORT */}
+                                    {isRecipient && (
+                                      <Button
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleReportTestimonial(testimonial.id)}
+                                        className="h-8 px-3 text-red-600 border-red-200 hover:bg-red-50 font-medium"
+                                      >
+                                        <AlertCircle className="w-4 h-4 mr-1" />
+                                        Report
+                                      </Button>
+                                    )}
+                                    
+                                  </div>
                                 </div>
-                                <div className="flex-1">
-                                  <p className="text-gray-700 italic text-lg">"{testimonial.content}"</p>
-                                  <p className="text-sm font-medium text-gray-900 mt-2">- {testimonial.author || testimonial.name}</p>
-                                </div>
+
+                                {/* BOTTOM ROW: Author & Rating */}
+                               {/* BOTTOM ROW: Author & Rating */}
+<div className="flex justify-between items-center mt-2">
+  <p className="text-sm font-medium">
+    -{' '}
+    
+    {/* REQUIREMENT: ACCESS CONTROL */}
+    {/* If the viewer is the Profile Owner (Recipient), show a clickable link. */}
+    {/* Otherwise, show plain red text. */}
+    {isOwnProfile ? (
+      <Link 
+        to={`/profile/${testimonial.userId}`} 
+        className="text-red-600 hover:text-red-700 hover:underline cursor-pointer transition-colors font-semibold"
+        title="View Author Profile"
+      >
+        {testimonial.author || 'Anonymous'}
+      </Link>
+    ) : (
+      <span className="text-red-600 opacity-90">
+        {testimonial.author || 'Anonymous'}
+      </span>
+    )}
+  </p>
+  
+  {/* Rating Display (Keep existing) */}
+  <div className="flex items-center gap-1">
+    {[...Array(testimonial.rating || 0)].map((_, i) => (
+      <Star key={i} className={`w-4 h-4 ${i < testimonial.rating ? 'text-red-500 fill-current' : 'text-gray-300'}`} />
+    ))}
+  </div>
+</div>
+                                
                               </div>
                             </div>
-                          ))}
-                        </div>
-                      ) : (
+                          </div>
+                        );
+                      })}
+                      
+                      {!isTestimonialsLoading && (!displayTestimonials || displayTestimonials.length === 0) && (
                         <div className="text-center py-12">
                           <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                           <p className="text-gray-500 text-lg">No testimonials available</p>
                           <p className="text-gray-400 text-sm mt-2">Testimonials from recipients will appear here</p>
                         </div>
                       )}
-                      
+
                       {!isOwnProfile && (
                         <div className="mt-6 text-center">
                           <Button 
@@ -2694,172 +2987,152 @@ const transformedData = {
         </div>
       </div>
 
-      {/* Edit Profile Modal */}
-      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle className="text-xl font-bold">Edit Profile</DialogTitle>
-            <DialogDescription>
-              Update your profile information.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input
-                  id="fullName"
-                  value={editForm.fullName}
-                  onChange={(e) => setEditForm({ ...editForm, fullName: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  value={editForm.email}
-                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="phone">Phone</Label>
-                <Input
-                  id="phone"
-                  value={editForm.phone}
-                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="age">Age</Label>
-                <Input
-                  id="age"
-                  type="number"
-                  value={editForm.age}
-                  onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="gender">Gender</Label>
-                <Select value={editForm.gender} onValueChange={(value) => setEditForm({ ...editForm, gender: value })}>
-                  <SelectTrigger className="mt-1">
-                    <SelectValue placeholder="Select gender" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Male">Male</SelectItem>
-                    <SelectItem value="Female">Female</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label htmlFor="weight">Weight (kg)</Label>
-                <Input
-                  id="weight"
-                  type="number"
-                  value={editForm.weight}
-                  onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="district">District</Label>
-                <Input
-                  id="district"
-                  value={editForm.district}
-                  onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="upazila">Upazila</Label>
-                <Input
-                  id="upazila"
-                  value={editForm.upazila}
-                  onChange={(e) => setEditForm({ ...editForm, upazila: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="bio">Bio</Label>
-              <Textarea
-                id="bio"
-                value={editForm.bio}
-                onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
-                className="mt-1"
-                rows={3}
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="facebook">Facebook</Label>
-                <Input
-                  id="facebook"
-                  value={editForm.facebook}
-                  onChange={(e) => setEditForm({ ...editForm, facebook: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="twitter">Twitter</Label>
-                <Input
-                  id="twitter"
-                  value={editForm.twitter}
-                  onChange={(e) => setEditForm({ ...editForm, twitter: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="linkedin">LinkedIn</Label>
-                <Input
-                  id="linkedin"
-                  value={editForm.linkedin}
-                  onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-              <div>
-                <Label htmlFor="instagram">Instagram</Label>
-                <Input
-                  id="instagram"
-                  value={editForm.instagram}
-                  onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
-                  className="mt-1"
-                />
-              </div>
-            </div>
-            <div>
-              <Label htmlFor="website">Website</Label>
-              <Input
-                id="website"
-                value={editForm.website}
-                onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
-                className="mt-1"
-              />
-            </div>
+ {/* Edit Profile Modal */}
+<Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+  {/* p-0 fixes the border cut-off issue by removing default padding so we can control spacing manually */}
+  <DialogContent className="w-full max-w-[95vw] sm:max-w-[600px] p-0 overflow-hidden flex flex-col max-h-[90vh]">
+    
+    <DialogHeader className="flex-shrink-0 px-6 pb-4 pt-6">
+      <DialogTitle className="text-xl font-bold">Edit Profile</DialogTitle>
+      <DialogDescription>
+        Update your profile information.
+      </DialogDescription>
+    </DialogHeader>
+
+    {/* Scrollable Form Area with px-6 padding to prevent border clipping */}
+    <div className="flex-1 overflow-y-auto px-6 pb-2">
+      <div className="space-y-4">
+        
+        {/* Row 1: Age & Weight */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="age">Age</Label>
+            <Input
+              id="age"
+              type="number"
+              value={editForm.age}
+              onChange={(e) => setEditForm({ ...editForm, age: e.target.value })}
+              className="mt-1"
+            />
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleSaveProfile}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div>
+            <Label htmlFor="weight">Weight (kg)</Label>
+            <Input
+              id="weight"
+              type="number"
+              value={editForm.weight}
+              onChange={(e) => setEditForm({ ...editForm, weight: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        {/* Row 2: District & Upazila */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="district">District</Label>
+            <Input
+              id="district"
+              value={editForm.district}
+              onChange={(e) => setEditForm({ ...editForm, district: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="upazila">Upazila</Label>
+            <Input
+              id="upazila"
+              value={editForm.upazila}
+              onChange={(e) => setEditForm({ ...editForm, upazila: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        {/* Row 3: Bio */}
+        <div>
+          <Label htmlFor="bio">Bio</Label>
+          <Textarea
+            id="bio"
+            value={editForm.bio}
+            onChange={(e) => setEditForm({ ...editForm, bio: e.target.value })}
+            className="mt-1"
+            rows={3}
+          />
+        </div>
+
+        {/* Row 4: Social Media */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <Label htmlFor="facebook">Facebook</Label>
+            <Input
+              id="facebook"
+              value={editForm.facebook}
+              onChange={(e) => setEditForm({ ...editForm, facebook: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="twitter">Twitter</Label>
+            <Input
+              id="twitter"
+              value={editForm.twitter}
+              onChange={(e) => setEditForm({ ...editForm, twitter: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="linkedin">LinkedIn</Label>
+            <Input
+              id="linkedin"
+              value={editForm.linkedin}
+              onChange={(e) => setEditForm({ ...editForm, linkedin: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+          <div>
+            <Label htmlFor="instagram">Instagram</Label>
+            <Input
+              id="instagram"
+              value={editForm.instagram}
+              onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
+              className="mt-1"
+            />
+          </div>
+        </div>
+
+        {/* Row 5: Website */}
+        <div>
+          <Label htmlFor="website">Website</Label>
+          <Input
+            id="website"
+            value={editForm.website}
+            onChange={(e) => setEditForm({ ...editForm, website: e.target.value })}
+            className="mt-1"
+          />
+        </div>
+      </div>
+    </div>
+
+    {/* Footer */}
+    <DialogFooter className="flex flex-col-reverse sm:flex-row gap-2 sm:justify-end flex-shrink-0 p-6 pt-4 border-t bg-background">
+      <Button variant="outline" onClick={() => setIsEditModalOpen(false)} className="w-full sm:w-auto">
+        Cancel
+      </Button>
+      {/* Button is disabled if no changes are detected */}
+      <Button 
+        onClick={handleSaveProfile} 
+        className="w-full sm:w-auto"
+        disabled={
+          JSON.stringify(editForm) === JSON.stringify(initialValues) || // Check if data changed
+          Object.keys(editForm).length === 0 // Safety check if form is empty
+        }
+      >
+        Save Changes
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
       {/* Add Education Modal */}
       <Dialog open={isAddingEducation} onOpenChange={setIsAddingEducation}>
@@ -3554,6 +3827,9 @@ const transformedData = {
       </Dialog>
 
       {/* Add Testimonial Dialog */}
+            {/* ... Previous Cards ... */}
+
+      {/* Add Testimonial Dialog */}
       <Dialog open={isAddingTestimonial} onOpenChange={setIsAddingTestimonial}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -3570,7 +3846,7 @@ const transformedData = {
                   <Star
                     key={star}
                     className={`w-8 h-8 cursor-pointer transition-colors ${
-                      star <= testimonialRating ? "text-yellow-500 fill-current" : "text-gray-300"
+                      star <= testimonialRating ? "text-red-500 fill-current" : "text-gray-300"
                     }`}
                     onClick={() => setTestimonialRating(star)}
                   />
@@ -3583,10 +3859,19 @@ const transformedData = {
                 id="testimonial"
                 placeholder="Share your experience with this donor..."
                 value={testimonialContent}
-                onChange={(e) => setTestimonialContent(e.target.value)}
-                className="mt-1"
+                onChange={(e) => {
+                  setTestimonialContent(e.target.value);
+                  if (testimonialError) setTestimonialError(null);
+                }}
+                className={`mt-1 ${testimonialError ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                 rows={4}
               />
+              {testimonialError && (
+                <p className="text-sm font-medium text-destructive mt-2 flex items-center gap-1">
+                  <AlertCircle className="h-4 w-4" />
+                  {testimonialError}
+                </p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -3598,6 +3883,60 @@ const transformedData = {
               disabled={isSubmittingTestimonial}
             >
               {isSubmittingTestimonial ? "Submitting..." : "Submit Testimonial"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* ✅ FIX 3: Edit Testimonial Dialog moved OUTSIDE the Add Dialog */}
+      <Dialog open={isEditingTestimonial} onOpenChange={setIsEditingTestimonial}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>Edit Testimonial</DialogTitle>
+            <DialogDescription>
+              Update your review for this donor.
+            </DialogDescription>
+          </DialogHeader>
+          
+          {editingTestimonial && (
+            <div className="space-y-4 py-4">
+              <div>
+                <Label>Rating</Label>
+                <div className="flex items-center space-x-1 mt-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-8 h-8 cursor-pointer transition-colors ${
+                        star <= editingTestimonial.rating 
+                          ? "text-red-500 fill-current" 
+                          : "text-gray-300"
+                      }`}
+                      onClick={() => setEditingTestimonial({ ...editingTestimonial, rating: star })}
+                    />
+                  ))}
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="edit-testimonial-content">Your Testimonial</Label>
+                <Textarea
+                  id="edit-testimonial-content"
+                  value={editingTestimonial.content}
+                  onChange={(e) => setEditingTestimonial({ ...editingTestimonial, content: e.target.value })}
+                  placeholder="Update your testimonial..."
+                  className="mt-1"
+                  rows={4}
+                />
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditingTestimonial(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateTestimonial}>
+              Update
             </Button>
           </DialogFooter>
         </DialogContent>

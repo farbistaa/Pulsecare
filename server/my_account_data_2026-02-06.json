@@ -1,0 +1,18 @@
+{
+  "profile": {
+    "fullName": "Rabeya Khatun Shompa",
+    "email": "user20@hotmail.com",
+    "phone": "+88001705614427",
+    "joinDate": "2026-08-29T17:59:35.914Z",
+    "lastLogin": "2026-02-06T15:40:30.635Z"
+  },
+  "settings": {
+    "visibility": "public",
+    "notifications": {
+      "donation": true,
+      "emergency": true,
+      "appointment": false
+    }
+  },
+  "generatedAt": "2026-02-06T15:40:30.635Z"
+}

@@ -11,11 +11,11 @@ import EmergencyModal from "@/components/EmergencyModal";
 import { useState, useEffect } from "react";
 
 // Pages
-import Home from "@/pages/Home";
+import Home from "@/components/Home";
 import Register from "@/pages/Register";
-import EnhancedLogin from "@/pages/EnhancedLogin";
+import Login from "@/pages/Login";
 import AdminLogin from "@/pages/AdminLogin";
-import ProfilePage from "@/pages/ProfilePage"; // This is for viewing any user's profile
+import ProfilePage from "@/pages/ProfilePage";
 import Search from "@/pages/Search";
 import Admin from "@/pages/Admin";
 import AdminDashboard from "@/pages/AdminDashboard";
@@ -25,10 +25,12 @@ import Analytics from "@/pages/Analytics";
 import Appointments from "@/pages/Appointments";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import TermsPage from "@/pages/terms";
-import VerificationPage from './pages/verification'; 
+import VerificationPage from './pages/verification';
 import HelpCenterPage from './pages/help';
 import NotFound from "@/pages/not-found";
-import Logout from "@/components/admin/Logout"; // Import Logout component
+import Logout from "@/components/admin/Logout";
+import AboutUsPage from '@/pages/about-us'; 
+
 
 // Define types for the ProtectedRoute props
 interface ProtectedRouteProps {
@@ -39,7 +41,7 @@ interface ProtectedRouteProps {
 // Protected Route Component with proper types
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = false }) => {
   const { user, isLoading } = useAuth();
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
 
   useEffect(() => {
     if (isLoading) return;
@@ -49,22 +51,26 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children, adminOnly = f
       return;
     }
 
+    if (user.isAdmin && location === '/profile') {
+      setLocation("/admin/dashboard");
+      return;
+    }
+
     if (adminOnly && !user.isAdmin) {
       setLocation("/");
       return;
     }
-  }, [user, isLoading, adminOnly, setLocation]);
+  }, [user, isLoading, adminOnly, setLocation, location]);
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  if (!user || (adminOnly && !user.isAdmin)) {
-    return null; // Will redirect in the useEffect
+  if (!user || (adminOnly && !user.isAdmin) || (user.isAdmin && location === '/profile')) {
+    return null;
   }
 
   return <>{children}</>;
@@ -89,12 +95,10 @@ const ScrollToTop = () => {
   const [location] = useLocation();
   
   useEffect(() => {
-    // Set scroll restoration to manual to prevent browser from restoring scroll position
     if ("scrollRestoration" in history) {
       history.scrollRestoration = "manual";
     }
     
-    // Scroll to top with smooth behavior
     const scrollToTop = () => {
       window.scrollTo({
         top: 0,
@@ -103,10 +107,7 @@ const ScrollToTop = () => {
       });
     };
     
-    // Initial scroll to top
     scrollToTop();
-    
-    // Add a small delay to ensure smooth scrolling works properly
     const timer = setTimeout(scrollToTop, 100);
     
     return () => clearTimeout(timer);
@@ -115,8 +116,6 @@ const ScrollToTop = () => {
   return null;
 };
 
-// Renamed your custom Router to AppRoutes to avoid conflict
-// In your AppRoutes function, update the profile routes:
 function AppRoutes() {
   const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
   
@@ -125,8 +124,9 @@ function AppRoutes() {
       <ScrollToTop />
       <Switch>
         <Route path="/" component={Home} />
+        <Route path="/about-us" component={AboutUsPage} />
         <Route path="/register" component={Register} />
-        <Route path="/login" component={EnhancedLogin} />
+        <Route path="/login" component={Login} />
         <Route path="/admin-login" component={AdminLogin} />
         
         {/* Protected profile routes */}
@@ -139,7 +139,7 @@ function AppRoutes() {
         </Route>
         
         <Route path="/profile/:id">
-          {() => ( // Remove params from here
+          {() => (
             <ProtectedRoute>
               <ProfilePage /> 
             </ProtectedRoute>
@@ -150,14 +150,27 @@ function AppRoutes() {
         <Route path="/notifications" component={Notifications} />
         <Route path="/appointments" component={Appointments} />
         <Route path="/settings" component={Settings} />
-        <Route path="/admin" component={Admin} />
-        <Route path="/admin-dashboard" component={AdminDashboardRoute} />
         <Route path="/analytics" component={Analytics} />
         <Route path="/privacy-policy" component={PrivacyPolicy} />
         <Route path="/verification" component={VerificationPage} />
         <Route path="/help" component={HelpCenterPage} />
         <Route path="/terms" component={TermsPage} />
+
+        {/* ========== ADMIN ROUTES — ALL render AdminDashboard ========== */}
+        <Route path="/admin" component={Admin} />
+        <Route path="/admin/dashboard" component={AdminDashboardRoute} />
+        <Route path="/admin/donor-management" component={AdminDashboardRoute} />
+        <Route path="/admin/inventory" component={AdminDashboardRoute} />
+        <Route path="/admin/emergency-blood-request" component={AdminDashboardRoute} />
+        <Route path="/admin/analytics" component={AdminDashboardRoute} />
+        <Route path="/admin/appointments" component={AdminDashboardRoute} />
+        <Route path="/admin/reactivation-request" component={AdminDashboardRoute} />
+        <Route path="/admin/verification-request" component={AdminDashboardRoute} />
+        <Route path="/admin/activity-log" component={AdminDashboardRoute} />
+        <Route path="/admin/settings" component={AdminDashboardRoute} />
         <Route path="/admin/logout" component={LogoutRoute} />
+
+        {/* Catch-all must be last */}
         <Route component={NotFound} />
       </Switch>
       <EmergencyModal
@@ -167,6 +180,7 @@ function AppRoutes() {
     </Layout>
   );
 }
+
 export default function App() {
   return (
     <>
@@ -175,7 +189,6 @@ export default function App() {
           <TooltipProvider>
             <AuthProvider>
               <Toaster />
-              {/* Wrap all routes inside Wouter Router */}
               <WouterRouter>
                 <AppRoutes />
               </WouterRouter>

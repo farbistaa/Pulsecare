@@ -70,7 +70,10 @@ export default function PasswordResetModal({ open, onOpenChange }: PasswordReset
 
   const requestResetMutation = useMutation({
     mutationFn: async (data: RequestResetData) => {
-      const response = await apiRequest('POST', '/api/auth/request-password-reset', data);
+      const response = await apiRequest('/api/auth/request-password-reset', {
+        method: 'POST',
+        body: data,
+      });
       return response.json();
     },
     onSuccess: (data) => {
@@ -92,9 +95,12 @@ export default function PasswordResetModal({ open, onOpenChange }: PasswordReset
 
   const verifyOtpMutation = useMutation({
     mutationFn: async (data: VerifyOtpData) => {
-      const response = await apiRequest('POST', '/api/auth/verify-password-reset', {
-        ...data,
-        token: resetToken,
+      const response = await apiRequest('/api/auth/verify-password-reset', {
+        method: 'POST',
+        body: {
+          ...data,
+          token: resetToken,
+        },
       });
       return response.json();
     },

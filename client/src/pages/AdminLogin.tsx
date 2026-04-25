@@ -71,7 +71,7 @@ export default function AdminLogin() {
       });
       
       // Navigate to admin dashboard
-      setLocation('/admin-dashboard');
+      setLocation('/admin/dashboard');
     },
     onError: (error: Error) => {
       toast({

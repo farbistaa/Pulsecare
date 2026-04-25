@@ -140,7 +140,7 @@ export function generateOTPMessage(otp: string, purpose: string): string {
   };
   
   return messages[purpose as keyof typeof messages] || 
-         `Your PulseCare verification code is ${otp}. Keep this code secure and don't share it with anyone.`;
+         `Your Pulsecare verification code is ${otp}. Keep this code secure and don't share it with anyone.`;
 }
 
 // Rate limiting helper functions

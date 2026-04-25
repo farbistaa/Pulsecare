@@ -34,5 +34,13 @@ export default defineConfig({
       strict: true,
       deny: ["**/.*"],
     },
+        proxy: {
+      '/api': {
+        // IMPORTANT: Make sure this port matches your BACKEND server port!
+        // Check your terminal where the backend runs. It usually says "Listening on port 5001" or 5000.
+        target: 'http://localhost:5000', 
+        changeOrigin: true,
+      },
+    },
   },
 });

@@ -1,73 +1,92 @@
 // src/context/AuthContext.tsx
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User } from '@shared/schema';
+import { 
+  onAuthStateChanged, 
+  signOut as firebaseSignOut, 
+  User as FirebaseUser
+} from 'firebase/auth';
+import { getFirebaseAuth } from '../lib/firebase';
 
 interface AuthContextType {
   user: User | null;
   login: (user: User) => void;
   logout: () => Promise<void>;
   isAuthenticated: boolean;
-  isLoading: boolean;
+  isLoading: boolean; // Global loading state (checking session)
   isAdmin: boolean;
+  checkAuth: () => Promise<void>; // Manual trigger
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true); // Start as true
 
   useEffect(() => {
-    // Always run authentication check on mount
-    initializeAuth();
-  }, []);
+    const auth = getFirebaseAuth();
 
-  const initializeAuth = async () => {
-    setIsLoading(true);
-    
-    try {
-      // Check localstorage first
-      const storedUser = localStorage.getItem('bdms_user');
-      if (!storedUser) {
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Parse stored user data to immediately set the user state
-      // This prevents flicker during server verification
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
-      
-      // Verify with server
-      const response = await fetch('/api/auth/check', {
-        credentials: 'include',
-      });
-      
-      if (response.ok) {
-        const userData = await response.json();
-        if (userData.user) {
-          // Update with fresh server data
-          setUser(userData.user);
-          localStorage.setItem('bdms_user', JSON.stringify(userData.user));
+    // 1. CHECK BACKEND SESSION (For Email/Password users)
+    const checkBackendSession = async () => {
+      try {
+        const response = await fetch('/api/auth/check', {
+          credentials: 'include', // Important: sends session cookie
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.user) {
+            setUser(data.user);
+            localStorage.setItem('bdms_user', JSON.stringify(data.user));
+          } else {
+            setUser(null);
+            localStorage.removeItem('bdms_user');
+          }
         } else {
-          // Server says no valid session
           setUser(null);
           localStorage.removeItem('bdms_user');
         }
-      } else {
-        // Server check failed
+      } catch (error) {
+        console.error("Session check error:", error);
         setUser(null);
-        localStorage.removeItem('bdms_user');
+      } finally {
+        // ONLY set loading to false AFTER backend check is complete
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-      setUser(null);
-      localStorage.removeItem('bdms_user');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    };
+
+    // 2. CHECK FIREBASE SESSION (For Phone/OTP users)
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser: FirebaseUser | null) => {
+      if (firebaseUser) {
+        // If Firebase has a user, we need to ensure backend knows about them
+        // This is mostly for persistence across reloads if using Firebase Auth
+        try {
+          const token = await firebaseUser.getIdToken();
+          const response = await fetch('/api/auth/firebase-login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ idToken: token })
+          });
+
+          if (response.ok) {
+            const data = await response.json();
+            setUser(data.user);
+            localStorage.setItem('bdms_user', JSON.stringify(data.user));
+          }
+        } catch (error) {
+          console.error("Firebase sync error:", error);
+        }
+      }
+      // Note: We do NOT set isLoading(false) here because the Backend check handles the global loading state.
+    });
+
+    // 3. INITIALIZE
+    checkBackendSession();
+
+    return () => unsubscribe();
+  }, []);
 
   const login = (userData: User) => {
     setUser(userData);
@@ -75,31 +94,55 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
+    setIsLoading(true); // Prevent UI interaction during logout
     try {
-      // Clear state immediately
-      setUser(null);
+      const auth = getFirebaseAuth();
       
-      // Clear localstorage
-      localStorage.removeItem('bdms_user');
-      
-      // Clear server session
-      const response = await fetch('/api/auth/logout', {
+      // Sign out from Firebase
+      try { 
+        await firebaseSignOut(auth); 
+      } catch (e) { 
+        // Ignore errors if not logged in via Firebase
+      }
+
+      // Clear backend session
+      await fetch('/api/auth/signout', {
         method: 'POST',
         credentials: 'include',
       });
       
-      if (!response.ok) {
-        console.warn('Server logout failed, but client state cleared');
-      }
-    } catch (error) {
-      console.error('Logout error:', error);
-      // Ensure client state is cleared even if server call fails
       setUser(null);
       localStorage.removeItem('bdms_user');
+      
+      // Hard reload to clear any stale state
+      window.location.href = '/';
+    } catch (error) {
+      console.error('Logout error:', error);
+      setIsLoading(false);
+    }
+  };
+  
+  // Manual check function
+  const checkAuth = async () => {
+    setIsLoading(true);
+    try {
+      const response = await fetch('/api/auth/check', { credentials: 'include' });
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+        localStorage.setItem('bdms_user', JSON.stringify(data.user));
+      } else {
+        setUser(null);
+        localStorage.removeItem('bdms_user');
+      }
+    } catch (error) {
+      console.error("Manual auth check failed", error);
+      setUser(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  // Use the isAdmin field from your User schema
   const isAdmin = user?.isAdmin === true;
   const isAuthenticated = !!user;
   
@@ -110,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     isAuthenticated,
     isLoading,
     isAdmin,
+    checkAuth,
   };
   
   return (

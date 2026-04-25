@@ -1,6 +1,6 @@
 // client/src/pages/PrivacyPolicy.tsx
 import { motion } from 'framer-motion';
-import { Shield, Lock, Eye, FileText, Globe, Phone, ArrowUp } from 'lucide-react';
+import { Shield, Lock, Eye, FileText, Globe, Phone } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -252,26 +252,13 @@ export default function PrivacyPolicy() {
               </div>
               <div className="mt-6 p-4 bg-gray-50 rounded-lg">
                 <p className="text-sm text-gray-600">
-                  <strong>Last Updated:</strong> January 29, 2025<br />
+                  <strong>Last Updated:</strong> January 29, 2026<br />
                   <strong>Version:</strong> 2.0<br />
                   We reserve the right to update this policy. Users will be notified of material changes.
                 </p>
               </div>
             </CardContent>
           </Card>
-
-          {/* Back to Top Button */}
-          <div className="flex justify-center mt-8">
-            <Button
-              onClick={scrollToTop}
-              variant="outline"
-              size="lg"
-              className="bg-white hover:bg-red-50 border-red-200 hover:border-red-300 text-red-600 hover:text-red-700 shadow-lg w-16 h-16 rounded-full p-0"
-              title="Back to Top"
-            >
-              <ArrowUp className="h-6 w-6" />
-            </Button>
-          </div>
         </div>
       </motion.div>
     </div>

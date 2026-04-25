@@ -92,18 +92,6 @@ const VerificationPage: React.FC = () => {
                 <p className="text-gray-300 mt-1">Verify your identity to build trust in the community</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Link 
-                href="/" 
-                className="group relative overflow-hidden bg-white text-gray-900 hover:bg-red-600 px-5 py-2.5 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2 font-medium shadow-md"
-              >
-                <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors duration-300">
-                  <Home className="h-4 w-4" />
-                  Back to Home
-                </span>
-                <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-700 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"></span>
-              </Link>
-            </div>
           </div>
         </div>
       </header>

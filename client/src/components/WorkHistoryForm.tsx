@@ -23,7 +23,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import Loader from 'ui/Loader';
+
 
 // Work history validation schema
 const workHistorySchema = z.object({
@@ -232,6 +232,7 @@ export function WorkHistoryForm() {
                 <div className="h-3 bg-gray-200 rounded w-full"></div>
               </div>
             ))}
+            
           </div>
         </CardContent>
       </Card>

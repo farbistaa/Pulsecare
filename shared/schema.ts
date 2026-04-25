@@ -5,6 +5,7 @@ import { z } from "zod";
 
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
+  firebaseUid: text("firebase_uid").notNull().unique(),
   username: text("username").notNull().unique(),
   email: text("email").notNull().unique(),
   phone: text("phone").notNull().unique(),
@@ -45,6 +46,11 @@ export const users = pgTable("users", {
   data_processing: boolean('data_processing').notNull().default(false),
   marketing: boolean('marketing').notNull().default(false),
   emergency_contact: boolean('emergency_contact').notNull().default(false),
+  last_name_change_date: timestamp('last_name_change_date'),
+  deletion_scheduled_at: timestamp('deletion_scheduled_at'),
+  notify_donation_reminder: boolean('notify_donation_reminder').default(true),
+  notify_emergency_requests: boolean('notify_emergency_requests').default(true),
+  notify_appointment_alerts: boolean('notify_appointment_alerts').default(false),
 }, (t) => ({
   bloodGroupIdx: index("users_blood_group_idx").on(t.bloodGroup),
   districtIdx: index("users_district_idx").on(t.district),
@@ -205,7 +211,7 @@ export const medicalHistory = pgTable("medical_history", {
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 }, (t) => ({
-  donorIdIdx: index("medical_history_donor_Id_idx").on(t.donorId),
+  donorIdIdx: index("medical_history_donorId_idx").on(t.donorId),
 }));
 export type MedicalHistory = typeof medicalHistory.$inferSelect;
 export type NewMedicalHistory = typeof medicalHistory.$inferInsert;
@@ -538,6 +544,21 @@ export const notificationTemplates = pgTable("notification_templates", {
 }, (t) => ({
   typeIdx: index("notification_templates_type_idx").on(t.type),
   isActiveIdx: index("notification_templates_is_active_idx").on(t.isActive),
+}));
+
+export const userActivityLogs = pgTable("user_activity_logs", {
+  id: serial("id").primaryKey(),
+  userId: integer("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  action: text("action").notNull(),
+  details: text("details"),
+  ipAddress: text("ip_address"),
+  city: text("city"),
+  country: text("country"),
+  userAgent: text("user_agent"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (t) => ({
+  userIdIdx: index("user_activity_logs_user_idx").on(t.userId),
+  createdAtIdx: index("user_activity_logs_created_idx").on(t.createdAt),
 }));
 
 export const systemSettings = pgTable("system_settings", {
@@ -937,7 +958,10 @@ export const updateDonationHistorySchema = z.object({
   donationType: z.string().optional(),
 });
 
-
+export const updateTestimonialSchema = z.object({
+  content: z.string().min(1, "Content is required").max(5000, "Content is too long"),
+  rating: z.number().min(1, "Rating must be at least 1").max(5, "Rating must not exceed 5"),
+});
 
 
 export const insertPrivacySettingsSchema = createInsertSchema(privacySettings).omit({
@@ -1036,3 +1060,4 @@ export type AdminAuditLog = typeof adminAuditLog.$inferSelect;
 export type NotificationTemplate = typeof notificationTemplates.$inferSelect;
 export type SystemSetting = typeof systemSettings.$inferSelect;
 export type BulkOperationLog = typeof bulkOperationsLog.$inferSelect;
+export type UserActivityLog = typeof userActivityLogs.$inferSelect;

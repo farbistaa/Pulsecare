@@ -94,7 +94,6 @@ const AchievementCounter = ({ end, label, icon: Icon, color, delay = 0 }: {
   color: string;
   delay?: number;
 }) => {
-  // Extract color from background gradient string for background overlay
   const getGradientColors = (colorStr: string) => {
     if (colorStr.includes('blue')) return 'from-blue-500/10 to-blue-600/10';
     if (colorStr.includes('red')) return 'from-red-500/10 to-red-600/10';
@@ -187,20 +186,17 @@ const FeatureCard = ({ feature, index }: { feature: any; index: number }) => {
         whileTap={{ scale: 0.98 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
       >
-        {/* Background Gradient Animation */}
         <motion.div
           className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
           style={{
             background: `linear-gradient(135deg, ${feature.color}30 0%, ${feature.color}20 100%)`
           }}
         />
-        {/* Professional Icon */}
         <motion.div
           className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 ${feature.bgColor} rounded-lg flex items-center justify-center mx-auto mb-3 sm:mb-4 relative z-10 group-hover:scale-110 transition-transform duration-300`}
         >
           <feature.icon className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white" />
         </motion.div>
-        {/* Content */}
         <div className="relative z-10 text-center flex-1 flex flex-col">
           <h3 className="text-base sm:text-lg md:text-xl font-bold mb-2 sm:mb-3 text-gray-900">
             {feature.title}
@@ -214,10 +210,8 @@ const FeatureCard = ({ feature, index }: { feature: any; index: number }) => {
   );
 };
 
-export default function ImmersiveHome() {
+export default function Home() {
   const { scrollY } = useScroll();
-  
-  // COMMENT: We're keeping the scrollY hook for other potential uses, but removing the immersive effect from the hero gradient
   
   const typingTexts = [
     "Find blood donors instantly in your area.",
@@ -296,44 +290,48 @@ export default function ImmersiveHome() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50 overflow-hidden">
+    // FIX: Removed overflow-hidden from here - it was clipping the hero section!
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50">
+      {/* FIX: Hero section now properly extends to cover white space under navbar */}
+      <style>{`
+        .home-hero-fix {
+          margin-left: calc(-50vw + 50%);
+          margin-top: -100px;
+          padding-top: 80px;
+          width: 100vw;
+          overflow: hidden;
+          min-height: 100vh;
+        }
+      `}</style>
      
-      {/* 
-        COMMENT: Hero Section
-        - Now has a transparent background to show the fixed gradient underneath
-        - Removed all parallax/immersive effects
-        - Content scrolls normally
-        - Added padding to ensure content is properly positioned
-      */}
-    <motion.div
-  className="relative min-h-screen flex items-center justify-center px-4 py-12 sm:py-16 md:py-20 mesh-gradient"
->
-  {/* Animated Background Elements */}
-  <div className="absolute inset-0 overflow-hidden">
-    {[...Array(20)].map((_, i) => (
       <motion.div
-        key={i}
-        className="absolute w-2 h-2 bg-red-300 rounded-full opacity-20"
-        animate={{
-          x: [0, 100, 0],
-          y: [0, -100, 0],
-          scale: [0, 1, 0],
-        }}
-        transition={{
-          duration: Math.random() * 10 + 5,
-          repeat: Infinity,
-          delay: Math.random() * 5,
-        }}
-        style={{
-          left: `${Math.random() * 100}%`,
-          top: `${Math.random() * 100}%`,
-        }}
-      />
-    ))}
-  </div>
+        className="relative flex items-center justify-center px-4 py-12 sm:py-16 md:py-20 mesh-gradient home-hero-fix"
+      >
+        {/* Animated Background Elements */}
+        <div className="absolute inset-0 overflow-hidden">
+          {[...Array(20)].map((_, i) => (
+            <motion.div
+              key={i}
+              className="absolute w-2 h-2 bg-red-300 rounded-full opacity-20"
+              animate={{
+                x: [0, 100, 0],
+                y: [0, -100, 0],
+                scale: [0, 1, 0],
+              }}
+              transition={{
+                duration: Math.random() * 10 + 5,
+                repeat: Infinity,
+                delay: Math.random() * 5,
+              }}
+              style={{
+                left: `${Math.random() * 100}%`,
+                top: `${Math.random() * 100}%`,
+              }}
+            />
+          ))}
+        </div>
         
         <div className="relative z-10 max-w-6xl mx-auto text-center">
-          {/* Main Heading with Enhanced Typography */}
           <motion.h1
             initial={{ opacity: 0, y: 50, scale: 0.8 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -344,7 +342,6 @@ export default function ImmersiveHome() {
             <TypingEffect texts={typingTexts} />
           </motion.h1>
           
-          {/* Enhanced Tagline with Pulsing Effect */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -386,7 +383,6 @@ export default function ImmersiveHome() {
             </p>
           </motion.div>
           
-          {/* Enhanced CTA Buttons */}
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -425,11 +421,7 @@ export default function ImmersiveHome() {
             </Link>
           </motion.div>
         </div>
-        
-        {/* COMMENT: Removed the hero-to-section transition effect that was at the bottom */}
       </motion.div>
-      
-      {/* COMMENT: Rest of the page content starts here */}
       
       {/* Interactive Statistics with Gamification */}
       <motion.section
@@ -462,28 +454,28 @@ export default function ImmersiveHome() {
             viewport={{ once: true }}
           >
             <AchievementCounter
-              end={parseInt(stats?.totalUsers) || 2000}
+              end={parseInt(stats?.totalDonors) || 0}
               label="Registered Users"
               icon={Users}
               color="bg-gradient-to-tr from-blue-500 to-blue-600"
               delay={200}
             />
             <AchievementCounter
-              end={parseInt(stats?.availableDonors) || 1564}
+              end={parseInt(stats?.availableDonors) || 0}
               label="Available Donors"
               icon={Heart}
               color="bg-gradient-to-tr from-red-500 to-red-600"
               delay={400}
             />
             <AchievementCounter
-              end={parseInt(stats?.totalDonations) || 800}
+              end={parseInt(stats?.totalDonations) || 0}
               label="Successful Donations"
               icon={Award}
               color="bg-gradient-to-tr from-green-500 to-green-600"
               delay={600}
             />
             <AchievementCounter
-              end={parseInt(stats?.totalEmergencyRequests) || 100}
+              end={parseInt(stats?.bloodRequests) || 0}
               label="Emergency Requests"
               icon={Zap}
               color="bg-gradient-to-tr from-orange-500 to-orange-600"
@@ -593,7 +585,7 @@ export default function ImmersiveHome() {
         </div>
       </motion.section>
 
-      {/* Why Choose PulseCare Section - Enhanced with Loader Effect */}
+      {/* Why Choose PulseCare Section */}
       <motion.section
         className="py-16 sm:py-20 md:py-32 bg-gradient-to-br from-red-50 via-white to-blue-50 relative overflow-hidden min-h-[600px]"
         initial={{ opacity: 0 }}
@@ -601,7 +593,6 @@ export default function ImmersiveHome() {
         viewport={{ once: true }}
         transition={{ duration: 0.8 }}
       >
-        {/* Enhanced Loading Animation Background with Multiple Layers */}
         <motion.div
           className="absolute inset-0 bg-gradient-to-r from-transparent via-blue-200/20 to-transparent"
           initial={{ x: "-100%" }}
@@ -687,9 +678,7 @@ export default function ImmersiveHome() {
             </p>
           </motion.div>
           
-          {/* Compatibility Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12 mb-8 sm:mb-12">
-            {/* Donor Compatibility */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -755,7 +744,6 @@ export default function ImmersiveHome() {
               </div>
             </motion.div>
             
-            {/* Recipient Compatibility */}
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -822,7 +810,6 @@ export default function ImmersiveHome() {
             </motion.div>
           </div>
           
-          {/* Quick Facts */}
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
@@ -866,7 +853,6 @@ export default function ImmersiveHome() {
         transition={{ duration: 1 }}
         viewport={{ once: true }}
       >
-        {/* Animated Background */}
         <div className="absolute inset-0">
           {[...Array(50)].map((_, i) => (
             <motion.div

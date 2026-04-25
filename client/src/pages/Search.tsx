@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import Loader from '@/components/ui/Loader'; // Import the Loader component
+import Loader from '@/components/ui/Loader';
 import {
   Select,
   SelectContent,
@@ -31,7 +31,6 @@ interface SearchFilters {
   eligibility: string;
 }
 
-// Debounce hook
 function useDebounce<T>(value: T, delay: number): T {
   const [debouncedValue, setDebouncedValue] = useState<T>(value);
   useEffect(() => {
@@ -64,12 +63,9 @@ export default function Search() {
   const [searchTriggered, setSearchTriggered] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   
-  // Debounce filters to avoid too many API calls
   const debouncedFilters = useDebounce(filters, 500);
-  
   const itemsPerPage = 9;
   
-  // Initialize filters from URL parameters on mount
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const initialFilters: SearchFilters = {
@@ -85,13 +81,11 @@ export default function Search() {
     if (urlParams.get('page')) {
       setCurrentPage(parseInt(urlParams.get('page')!) || 1);
     }
-    // If we have filters from URL, trigger search
     if (initialFilters.bloodGroup || initialFilters.district || initialFilters.isAvailable) {
       setSearchTriggered(true);
     }
   }, []);
   
-  // Update URL when filters change
   useEffect(() => {
     if (!searchTriggered) return;
     
@@ -109,7 +103,6 @@ export default function Search() {
     window.history.replaceState(null, '', newUrl);
   }, [debouncedFilters, currentPage, searchTriggered]);
   
-  // Scroll to results when page changes
   useEffect(() => {
     if (resultsRef.current && (searchTriggered || filters.bloodGroup)) {
       resultsRef.current.scrollIntoView({ 
@@ -122,7 +115,6 @@ export default function Search() {
   const { data: donorsData, isLoading } = useQuery({
     queryKey: ['/api/donors/search', { ...debouncedFilters, page: currentPage, limit: itemsPerPage }],
     queryFn: async () => {
-      // Only search if search has been triggered and we have some filters
       if (!searchTriggered) {
         return { donors: [], total: 0 };
       }
@@ -146,19 +138,16 @@ export default function Search() {
   const donors = donorsData?.donors || [];
   const totalDonors = donorsData?.total || 0;
   
-  // Handle search bar filters change
   const handleFiltersChange = useCallback((newFilters: SearchFilters) => {
     setFilters(newFilters);
     setCurrentPage(1);
   }, []);
   
-  // Handle search trigger
   const handleSearch = useCallback(() => {
     setSearchTriggered(true);
     setCurrentPage(1);
   }, []);
   
-  // Reset all filters function
   const resetAllFilters = useCallback(() => {
     const emptyFilters: SearchFilters = {
       bloodGroup: '',
@@ -185,7 +174,6 @@ export default function Search() {
     const buttons = [];
     const maxVisiblePages = 5;
     
-    // Previous button
     buttons.push(
       <Button
         key="prev"
@@ -198,7 +186,6 @@ export default function Search() {
       </Button>
     );
     
-    // Page numbers
     let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
     let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
     
@@ -220,7 +207,6 @@ export default function Search() {
       );
     }
     
-    // Show ellipsis and last page if needed
     if (endPage < totalPages) {
       if (endPage < totalPages - 1) {
         buttons.push(
@@ -239,7 +225,6 @@ export default function Search() {
       );
     }
     
-    // Next button
     buttons.push(
       <Button
         key="next"
@@ -255,7 +240,6 @@ export default function Search() {
     return buttons;
   };
   
-  // Step indicators component
   const StepIndicators = () => {
     const steps = [
       { id: 'blood', label: 'Choose blood group' },
@@ -265,7 +249,6 @@ export default function Search() {
       { id: 'results', label: 'Find Suitable Donor' }
     ];
     
-    // Determine current step
     const currentStep = filters.bloodGroup ? 
       (filters.division || filters.district || filters.upazila ? 
         (filters.eligibility || filters.isAvailable ? 
@@ -306,7 +289,6 @@ export default function Search() {
     );
   };
   
-  // Ready to find donors section with step indicators
   const ReadyToFindDonorsWithSteps = () => (
     <div className="text-center mt-12 mb-8">
       <StepIndicators />
@@ -314,10 +296,12 @@ export default function Search() {
   );
   
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50">
+    // Keeps background covering the white space perfectly
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-red-50 -mt-[100px] pt-[80px]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* Search Header */}
-        <div className="pt-8 pb-6">
+        
+        {/* FIX: Increased pt-8 to pt-12 to add proper white space below the navbar */}
+        <div className="pt-20 pb-6">
           <div className="text-center mb-8">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Find Blood Donors</h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-6">
@@ -345,9 +329,8 @@ export default function Search() {
           />
         </div>
         
-        {/* Search Results Section - Wrapped with ref */}
+        {/* Search Results Section */}
         <div ref={resultsRef}>
-          {/* Search Results Header */}
           {(searchTriggered || filters.bloodGroup) && (
             <div className="mb-8">
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-6">
@@ -392,7 +375,6 @@ export default function Search() {
             </div>
           )}
           
-          {/* Donor Cards Grid */}
           {!searchTriggered && !filters.bloodGroup ? (
             <div className="text-center py-20">
               <SearchIcon className="w-20 h-20 text-gray-300 mx-auto mb-6" />
@@ -419,7 +401,6 @@ export default function Search() {
               </div>
             </div>
           ) : isLoading ? (
-            // Replace skeleton grid with centered Loader
             <div className="flex justify-center items-center py-20 mb-8">
               <Loader />
             </div>
@@ -438,7 +419,6 @@ export default function Search() {
                 ))}
               </div>
               
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="flex justify-center pb-12">
                   <nav className="flex items-center space-x-2">
@@ -469,7 +449,6 @@ export default function Search() {
         </div>
       </div>
       
-      {/* Modals */}
       <ContactModal 
         open={contactModalOpen}
         onOpenChange={(open) => {

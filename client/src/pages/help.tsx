@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { 
   HelpCircle, Search, Mail, Phone, MessageSquare, BookOpen, 
-  Users, Heart, Shield, AlertTriangle, ChevronRight, Home,
+  Users, Heart, Shield, AlertTriangle, ChevronRight,
   FileText, MapPin, Zap, Star
 } from 'lucide-react';
 
@@ -12,6 +12,45 @@ const HelpCenterPage: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [expandedFAQ, setExpandedFAQ] = useState<number | null>(null);
   const [hoveredCard, setHoveredCard] = useState<string | null>(null);
+
+  // Fix white space by removing all default margins and adjusting parent spacing
+  useEffect(() => {
+    // Reset html and body margins
+    document.documentElement.style.margin = '0';
+    document.documentElement.style.padding = '0';
+    document.body.style.margin = '0';
+    document.body.style.padding = '0';
+    
+    // Find and remove margin/padding from parent layout wrappers
+    const mainElements = document.querySelectorAll('main, [class*="container"], [class*="wrapper"], [class*="content"]');
+    mainElements.forEach(el => {
+      const htmlEl = el as HTMLElement;
+      
+      // CRITICAL FIX: Do not remove padding from elements inside a footer.
+      // This prevents the script from stripping the Footer's top padding.
+      if (htmlEl.closest('footer')) return;
+
+      if (htmlEl.offsetTop === 0 || htmlEl.parentElement === document.body || htmlEl.parentElement?.tagName === 'HTML') {
+        htmlEl.style.marginTop = '0';
+        htmlEl.style.paddingTop = '0';
+      }
+    });
+
+    return () => {
+      document.documentElement.style.margin = '';
+      document.documentElement.style.padding = '';
+      document.body.style.margin = '';
+      document.body.style.padding = '';
+      mainElements.forEach(el => {
+        const htmlEl = el as HTMLElement;
+        // Restore styles on cleanup, ignoring footer elements again
+        if (htmlEl.closest('footer')) return;
+        
+        htmlEl.style.marginTop = '';
+        htmlEl.style.paddingTop = '';
+      });
+    };
+  }, []);
 
   const categories = [
     { id: 'all', name: 'All Topics', icon: HelpCircle, color: 'text-gray-600' },
@@ -132,10 +171,15 @@ const HelpCenterPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-
-      {/* Header */}
-      <header className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-8 px-4 shadow-lg relative z-10">
+    <div 
+      className="min-h-screen bg-gray-50 -mt-4 pb-12" 
+      style={{ marginTop: '-16px' }}
+    >
+      {/* Header - Covers top edge */}
+      <header 
+        className="bg-gradient-to-r from-gray-900 to-gray-800 text-white py-8 px-4 shadow-lg relative"
+        style={{ marginTop: '-16px' }}
+      >
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-4">
@@ -147,24 +191,12 @@ const HelpCenterPage: React.FC = () => {
                 <p className="text-gray-300 mt-1">Find answers and get support</p>
               </div>
             </div>
-            <div className="flex gap-3">
-              <Link 
-                href="/" 
-                className="group relative overflow-hidden bg-white text-gray-900 hover:bg-red-600 px-5 py-2.5 rounded-lg transition-all duration-300 ease-in-out transform hover:scale-105 flex items-center gap-2 font-medium shadow-md"
-              >
-                <span className="relative z-10 flex items-center gap-2 group-hover:text-white transition-colors duration-300">
-                  <Home className="h-4 w-4" />
-                  Back to Home
-                </span>
-                <span className="absolute inset-0 bg-gradient-to-r from-red-500 to-red-700 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-300 ease-in-out"></span>
-              </Link>
-            </div>
           </div>
         </div>
       </header>
 
       {/* Search Section */}
-      <div className="bg-white py-8 px-4 shadow-sm relative z-10">
+      <div className="bg-white py-8 px-4 shadow-sm">
         <div className="container mx-auto max-w-4xl">
           <div className="relative max-w-2xl mx-auto">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -182,7 +214,7 @@ const HelpCenterPage: React.FC = () => {
       </div>
 
       {/* Categories Section */}
-      <div className="py-8 px-4 relative z-10">
+      <div className="py-8 px-4">
         <div className="container mx-auto max-w-6xl">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <Zap className="h-5 w-5 text-red-600" />
@@ -217,7 +249,7 @@ const HelpCenterPage: React.FC = () => {
       </div>
 
       {/* FAQ Section */}
-      <div className="py-8 px-4 bg-white relative z-10">
+      <div className="py-8 px-4 bg-white">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-red-600" />
@@ -261,7 +293,7 @@ const HelpCenterPage: React.FC = () => {
       </div>
 
       {/* Contact Support Section */}
-      <div className="py-12 px-4 bg-gradient-to-br from-red-50 to-red-100 relative z-10">
+      <div className="py-12 px-4 bg-gradient-to-br from-red-50 to-red-100">
         <div className="container mx-auto max-w-6xl">
           <div className="text-center mb-8">
             <h2 className="text-2xl font-bold text-gray-900 mb-2 flex items-center justify-center gap-2">
@@ -299,10 +331,9 @@ const HelpCenterPage: React.FC = () => {
       </div>
 
       {/* Quick Links Section */}
-      <div className="py-8 px-4 relative z-10">
+      <div className="py-8 px-4">
         <div className="container mx-auto max-w-4xl">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center gap-2">
-           
             Quick Links
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -362,10 +393,6 @@ const HelpCenterPage: React.FC = () => {
           </div>
         </div>
       </div>
-
-      {/* Floating Action Button */}
-     
-
       
     </div>
   );

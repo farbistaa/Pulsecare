@@ -24,7 +24,7 @@ const RouteGuard: React.FC<RouteGuardProps> = ({ children }) => {
     // If admin is on profile page, redirect to admin dashboard
     if (isAdmin && (currentPath === '/profile' || currentPath.startsWith('/profile/'))) {
       console.log('RouteGuard: Redirecting admin to admin dashboard');
-      setLocation('/admin-dashboard');
+      setLocation('/admin/dashboard');
       return;
     }
     

@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { formatDistanceToNow } from 'date-fns';
-import Loader from './ui/Loader'; // Fixed import path
+import Loader from './ui/Loader'; // Ensure this path is correct
 
 interface Notification {
   id: number;
@@ -45,6 +45,9 @@ export default function NotificationCenter({ className = '' }: NotificationCente
 
   const fetchNotifications = async () => {
     try {
+      // Reset loading state when fetching
+      setLoading(true);
+      
       const response = await fetch(`/api/notifications?unreadOnly=${filter === 'unread'}`, {
         headers: { 'Content-Type': 'application/json' }
       });
@@ -144,6 +147,9 @@ export default function NotificationCenter({ className = '' }: NotificationCente
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  // --- FIX: ONE SINGLE LOADER ---
+  // Instead of looping 3 times, we return the Card with a single centered loader 
+  // inside the ScrollArea if the data is still fetching.
   if (loading) {
     return (
       <Card className={className}>
@@ -153,19 +159,17 @@ export default function NotificationCenter({ className = '' }: NotificationCente
             Notifications
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {[1, 2, 3].map(i => (
-              <div key={i}>
-                <Loader />
-                <div className="h-16 bg-gray-200 rounded"></div>
-              </div>
-            ))}
-          </div>
+        <CardContent className="p-0">
+          <ScrollArea className="h-96">
+            <div className="flex flex-col items-center justify-center h-full py-20">
+              <Loader size={40} color="#dc2626" />
+            </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     );
   }
+  // -------------------------------
 
   return (
     <Card className={className}>

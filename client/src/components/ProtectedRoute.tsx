@@ -33,13 +33,13 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     }
 
     if (excludeAdmins && isAdmin) {
-      setLocation("/admin-dashboard");
+      setLocation("/admin/dashboard");
       return;
     }
     
     // Additional check: if user is admin and on profile route, redirect to admin dashboard
     if (isAdmin && location[0] === '/profile') {
-      setLocation('/admin-dashboard');
+      setLocation('/admin/dashboard');
       return;
     }
   }, [isLoading, isAuthenticated, isAdmin, adminOnly, excludeAdmins, location, setLocation, redirectTo]);

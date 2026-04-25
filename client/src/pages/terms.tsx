@@ -1081,17 +1081,8 @@ const TermsPage: React.FC = () => {
               </div>
               <div>
                 <h1 className="text-3xl font-bold">Terms & Conditions</h1>
-                <p className="text-gray-300 mt-1">Effective Date: January 29, 2025 | Version: 1.0</p>
+                <p className="text-gray-300 mt-1">Effective Date: January 29, 2026 | Version: 1.0</p>
               </div>
-            </div>
-            <div className="flex gap-3">
-              <Link 
-                href="/" 
-                className="bg-white text-gray-900 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors flex items-center gap-2 font-medium shadow-sm"
-              >
-                <Home className="h-4 w-4" />
-                Back to Home
-              </Link>
             </div>
           </div>
         </div>
@@ -1156,7 +1147,7 @@ const TermsPage: React.FC = () => {
 
         {/* Footer */}
         <div className="mt-8 text-center text-gray-600 text-sm">
-          <p>© 2025 PulseCare. All rights reserved.</p>
+          <p>© 2026 PulseCare. All rights reserved.</p>
           <p className="mt-1">Compliant with GDPR, HIPAA & Bangladesh Digital Security Act 2018</p>
         </div>
       </main>

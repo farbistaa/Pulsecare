@@ -595,7 +595,7 @@ const AirbnbSearchBar: React.FC<AirbnbSearchBarProps> = ({
           <Search className="w-5 h-5 text-gray-600 flex-shrink-0" />
           <div className="text-left min-w-0 flex-1">
             <div className="text-sm font-medium text-gray-900 truncate">
-              {filters.bloodGroup || 'Find donors'}
+              {filters.bloodGroup || 'Find Donors'}
             </div>
             <div className="text-xs text-gray-600 truncate">
               {filters.district || 'Any location'} • {activeFilterCount} filter{activeFilterCount !== 1 ? 's' : ''}
