@@ -1,7 +1,6 @@
-// InventoryManagement.tsx
 import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -37,6 +36,16 @@ import {
   Map,
   Mail,
   Phone,
+  AlertCircle,
+  Bell,
+  Settings,
+  MoreVertical,
+  Eye,
+  EyeOff,
+  ChevronDown,
+  ChevronUp,
+  Grid,
+  Table,
 } from 'lucide-react';
 import {
   LineChart,
@@ -58,6 +67,10 @@ import {
   RadialBar,
   PolarAngleAxis,
   ComposedChart,
+  RadarChart,
+  PolarGrid,
+  PolarRadiusAxis,
+  Treemap,
 } from 'recharts';
 
 interface Donor {
@@ -129,45 +142,98 @@ interface BloodGroupStats {
 
 // WCAG compliant color palette with better contrast
 const COLORS = {
-  primary: '#2563EB', // Blue with good contrast
-  accent1: '#7C3AED', // Purple instead of red
-  accent2: '#0891B2', // Cyan
-  accent3: '#059669', // Green
-  neutralDark: '#1F2937', // Dark gray for text
-  neutralLight: '#F9FAFB', // Light gray for backgrounds
-  cardBg: '#FFFFFF',
-  cardBgDark: '#1F2937',
-  text: '#111827', // Dark text for better contrast
-  textDark: '#F9FAFB',
-  muted: '#6B7280', // Muted gray
-  mutedDark: '#9CA3AF',
+  primary: '#1e40af', // Darker blue for better contrast
+  primaryHover: '#1e3a8a', // Even darker for hover states
+  accent1: '#7e22ce', // Darker purple
+  accent2: '#0e7490', // Darker cyan
+  accent3: '#047857', // Darker green
+  neutralDark: '#111827', // Almost black for text
+  neutralLight: '#f9fafb', // Light gray for backgrounds
+  cardBg: '#ffffff',
+  cardBgDark: '#1f2937',
+  text: '#111827', // Almost black for better contrast
+  textDark: '#f9fafb',
+  muted: '#4b5563', // Darker gray for better contrast
+  mutedDark: '#d1d5db',
   success: '#059669', // Green
-  warning: '#D97706', // Amber instead of yellow
-  danger: '#DC2626', // Red for critical alerts only
-  info: '#2563EB', // Blue
+  successLight: '#d1fae5', // Light green for backgrounds
+  warning: '#d97706', // Darker amber
+  warningLight: '#fef3c7', // Light amber for backgrounds
+  danger: '#b91c1c', // Darker red for critical alerts
+  dangerLight: '#fee2e2', // Light red for backgrounds
+  info: '#1d4ed8', // Darker blue
+  infoLight: '#dbeafe', // Light blue for backgrounds
   // High contrast colors for charts
   chartColors: [
-    '#2563EB', // Blue
-    '#7C3AED', // Purple
-    '#059669', // Green
-    '#D97706', // Amber
-    '#DC2626', // Red
-    '#0891B2', // Cyan
-    '#BE185D', // Pink
-    '#4338CA', // Indigo
+    '#1e40af', // Darker blue
+    '#7e22ce', // Darker purple
+    '#047857', // Darker green
+    '#d97706', // Darker amber
+    '#b91c1c', // Darker red
+    '#0e7490', // Darker cyan
+    '#be185d', // Darker pink
+    '#3730a3', // Darker indigo
   ]
 };
 
-// Blood group colors with gradients
+// Blood group colors with gradients and better contrast
 const BLOOD_GROUP_COLORS = {
-  'A+': { start: '#2563EB', end: '#1D4ED8', light: '#DBEAFE', text: '#1E40AF' },
-  'A-': { start: '#7C3AED', end: '#6D28D9', light: '#EDE9FE', text: '#6D28D9' },
-  'B+': { start: '#059669', end: '#047857', light: '#D1FAE5', text: '#047857' },
-  'B-': { start: '#0891B2', end: '#0E7490', light: '#CFFAFE', text: '#0E7490' },
-  'AB+': { start: '#D97706', end: '#B45309', light: '#FEF3C7', text: '#B45309' },
-  'AB-': { start: '#BE185D', end: '#9F1239', light: '#FCE7F3', text: '#9F1239' },
-  'O+': { start: '#4338CA', end: '#3730A3', light: '#E0E7FF', text: '#3730A3' },
-  'O-': { start: '#DC2626', end: '#B91C1C', light: '#FEE2E2', text: '#B91C1C' },
+  'A+': { 
+    start: '#1e40af', 
+    end: '#1e3a8a', 
+    light: '#dbeafe', 
+    text: '#1e3a8a',
+    contrastText: '#ffffff' // For badges and other small elements
+  },
+  'A-': { 
+    start: '#7e22ce', 
+    end: '#6b21a8', 
+    light: '#f3e8ff', 
+    text: '#6b21a8',
+    contrastText: '#ffffff'
+  },
+  'B+': { 
+    start: '#047857', 
+    end: '#047857', 
+    light: '#d1fae5', 
+    text: '#047857',
+    contrastText: '#ffffff'
+  },
+  'B-': { 
+    start: '#0e7490', 
+    end: '#155e75', 
+    light: '#cffafe', 
+    text: '#155e75',
+    contrastText: '#ffffff'
+  },
+  'AB+': { 
+    start: '#d97706', 
+    end: '#b45309', 
+    light: '#fef3c7', 
+    text: '#b45309',
+    contrastText: '#ffffff'
+  },
+  'AB-': { 
+    start: '#be185d', 
+    end: '#9d174d', 
+    light: '#fce7f3', 
+    text: '#9d174d',
+    contrastText: '#ffffff'
+  },
+  'O+': { 
+    start: '#3730a3', 
+    end: '#312e81', 
+    light: '#e0e7ff', 
+    text: '#312e81',
+    contrastText: '#ffffff'
+  },
+  'O-': { 
+    start: '#b91c1c', 
+    end: '#991b1b', 
+    light: '#fee2e2', 
+    text: '#991b1b',
+    contrastText: '#ffffff'
+  },
 };
 
 const bloodGroups = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -195,7 +261,8 @@ const InventoryManagement = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState<'location' | 'donors'>('donors');
-  const [criticalAlertTab, setCriticalAlertTab] = useState(bloodGroups[0]);
+  const [expandedCriticalGroups, setExpandedCriticalGroups] = useState<Record<string, boolean>>({});
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
 
   // Fetch donor availability stats
   const { data: stats, isLoading: statsLoading } = useQuery<DonorAvailabilityStats>({
@@ -326,29 +393,73 @@ const InventoryManagement = () => {
     return matchesSearch && matchesBloodGroup && matchesDistrict && matchesStatus;
   }) || [];
 
-  // Updated getStatusBadge function to handle all statuses with WCAG compliant colors
+  // Updated getStatusBadge function with WCAG compliant colors
   const getStatusBadge = (status: string) => {
+    const badgeStyles = {
+      className: "px-3 py-1 rounded-full text-xs font-semibold",
+    };
+    
     switch (status) {
       case 'active':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-success-light text-success border-success">
+            Active
+          </Badge>
+        );
       case 'inactive':
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Inactive</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-gray-100 text-gray-800 border-gray-200">
+            Inactive
+          </Badge>
+        );
       case 'pending':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">Pending</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-warning-light text-warning border-warning">
+            Pending
+          </Badge>
+        );
       case 'verified':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Verified</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-info-light text-info border-info">
+            Verified
+          </Badge>
+        );
       case 'unverified':
-        return <Badge className="bg-purple-100 text-purple-800 border-purple-200">Unverified</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-purple-100 text-purple-800 border-purple-200">
+            Unverified
+          </Badge>
+        );
       case 'eligible':
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Eligible</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-success-light text-success border-success">
+            Eligible
+          </Badge>
+        );
       case 'booked':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Booked</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-info-light text-info border-info">
+            Booked
+          </Badge>
+        );
       case 'in_progress':
-        return <Badge className="bg-amber-100 text-amber-800 border-amber-200">In Progress</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-warning-light text-warning border-warning">
+            In Progress
+          </Badge>
+        );
       case 'unavailable':
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Unavailable</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-danger-light text-danger border-danger">
+            Unavailable
+          </Badge>
+        );
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return (
+          <Badge {...badgeStyles} className="bg-gray-100 text-gray-800 border-gray-200">
+            {status}
+          </Badge>
+        );
     }
   };
 
@@ -366,6 +477,13 @@ const InventoryManagement = () => {
     setSelectedDistrict('all');
     setSelectedDivision('all');
     setStatusFilter('all');
+  };
+
+  const toggleExpandedCriticalGroup = (bloodGroup: string) => {
+    setExpandedCriticalGroups(prev => ({
+      ...prev,
+      [bloodGroup]: !prev[bloodGroup]
+    }));
   };
 
   // Get upazilas based on selected district
@@ -428,179 +546,256 @@ const InventoryManagement = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-        <div className="flex items-center space-x-2 mt-4 md:mt-0">
-          <Button variant="outline" className="text-gray-700 border-gray-300 hover:bg-gray-50">
-            <Download className="h-4 w-4 mr-2" />
-            Export Report
-          </Button>
-          <div className="flex items-center space-x-2">
-            <Button
-              variant={timeRange === '7d' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTimeRange('7d')}
-              className={timeRange === '7d' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}
+      {/* Header with improved accessibility */}
+      <header className="bg-white shadow-sm rounded-lg p-4 md:p-6">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-neutralDark">Blood & Donor Inventory</h1>
+            <p className="text-muted mt-1">Monitor and manage blood inventory across all locations</p>
+          </div>
+          
+          <div className="flex flex-wrap items-center gap-3">
+            <Button 
+              variant="outline" 
+              className="text-neutralDark border-gray-300 hover:bg-gray-50 focus:ring-2 focus:ring-primary focus:ring-offset-2"
+              aria-label="Export inventory report"
             >
-              7 Days
+              <Download className="h-4 w-4 mr-2" />
+              Export Report
             </Button>
-            <Button
-              variant={timeRange === '30d' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTimeRange('30d')}
-              className={timeRange === '30d' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}
-            >
-              30 Days
-            </Button>
-            <Button
-              variant={timeRange === '90d' ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setTimeRange('90d')}
-              className={timeRange === '90d' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}
-            >
-              90 Days
-            </Button>
+            
+            <div className="flex items-center bg-gray-100 rounded-lg p-1">
+              <Button
+                variant={timeRange === '7d' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setTimeRange('7d')}
+                className={`rounded-md ${timeRange === '7d' ? 'bg-primary text-white shadow' : 'text-neutralDark hover:bg-gray-200'}`}
+                aria-label="Show data for last 7 days"
+              >
+                7 Days
+              </Button>
+              <Button
+                variant={timeRange === '30d' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setTimeRange('30d')}
+                className={`rounded-md ${timeRange === '30d' ? 'bg-primary text-white shadow' : 'text-neutralDark hover:bg-gray-200'}`}
+                aria-label="Show data for last 30 days"
+              >
+                30 Days
+              </Button>
+              <Button
+                variant={timeRange === '90d' ? 'default' : 'ghost'}
+                size="sm"
+                onClick={() => setTimeRange('90d')}
+                className={`rounded-md ${timeRange === '90d' ? 'bg-primary text-white shadow' : 'text-neutralDark hover:bg-gray-200'}`}
+                aria-label="Show data for last 90 days"
+              >
+                90 Days
+              </Button>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Stats Overview */}
+      {/* Stats Overview with improved design and accessibility */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+        <Card className="shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-muted">
                   Total Eligible Donors
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-neutralDark mt-1">
                   {stats?.eligibleDonors.toLocaleString() || '0'}
                 </p>
-                <div className="flex items-center mt-1">
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">+5% from last month</span>
+                <div className="flex items-center mt-2">
+                  <ArrowUp className="h-4 w-4 text-success mr-1" aria-hidden="true" />
+                  <span className="text-sm text-success font-medium">
+                    +5% from last month
+                  </span>
                 </div>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-green-500 flex items-center justify-center">
-                <UserCheck className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 rounded-xl bg-success-light flex items-center justify-center" aria-hidden="true">
+                <UserCheck className="w-7 h-7 text-success" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+        <Card className="shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-muted">
                   Critical Blood Groups
                 </p>
-                <p className="text-2xl font-bold text-amber-600">
+                <p className="text-3xl font-bold text-warning mt-1">
                   {stats?.criticalBloodGroups.length || '0'}
                 </p>
-                <p className="text-xs text-amber-600 mt-1">
+                <p className="text-sm text-warning mt-2 font-medium">
                   {stats?.criticalBloodGroups.reduce((sum, group) => sum + group.criticalUpazilas.length, 0) || 0} upazila{stats?.criticalBloodGroups.reduce((sum, group) => sum + group.criticalUpazilas.length, 0) !== 1 ? 's' : ''} affected
                 </p>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-amber-500 flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 rounded-xl bg-warning-light flex items-center justify-center" aria-hidden="true">
+                <AlertTriangle className="w-7 h-7 text-warning" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+        <Card className="shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-muted">
                   Match Success Rate
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-neutralDark mt-1">
                   {stats?.matchSuccessRate || '0'}%
                 </p>
-                <div className="flex items-center mt-1">
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">+3% from last month</span>
+                <div className="flex items-center mt-2">
+                  <ArrowUp className="h-4 w-4 text-success mr-1" aria-hidden="true" />
+                  <span className="text-sm text-success font-medium">
+                    +3% from last month
+                  </span>
                 </div>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-blue-500 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 rounded-xl bg-info-light flex items-center justify-center" aria-hidden="true">
+                <TrendingUp className="w-7 h-7 text-info" />
               </div>
             </div>
           </CardContent>
         </Card>
 
-        <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+        <Card className="shadow-md border border-gray-200 hover:shadow-lg transition-shadow">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">
+                <p className="text-sm font-medium text-muted">
                   Donor Reactivation Rate
                 </p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-3xl font-bold text-neutralDark mt-1">
                   {stats?.reactivationRate || '0'}%
                 </p>
-                <div className="flex items-center mt-1">
-                  <ArrowUp className="h-3 w-3 text-green-500 mr-1" />
-                  <span className="text-xs text-green-600">+1.5% from last month</span>
+                <div className="flex items-center mt-2">
+                  <ArrowUp className="h-4 w-4 text-success mr-1" aria-hidden="true" />
+                  <span className="text-sm text-success font-medium">
+                    +1.5% from last month
+                  </span>
                 </div>
               </div>
-              <div className="w-12 h-12 rounded-lg bg-purple-500 flex items-center justify-center">
-                <RefreshCw className="w-6 h-6 text-white" />
+              <div className="w-14 h-14 rounded-xl bg-purple-100 flex items-center justify-center" aria-hidden="true">
+                <RefreshCw className="w-7 h-7 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Charts Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      {/* Charts Section with improved accessibility and design */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Donor Availability Trends - Stacked Line Chart */}
-        <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+        <Card className="shadow-md border border-gray-200 lg:col-span-2">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-gray-900">
-              <TrendingUp className="w-5 h-5 text-blue-600" />
+            <CardTitle className="flex items-center text-neutralDark">
+              <TrendingUp className="w-5 h-5 text-primary mr-2" />
               <span>Donor Availability Trends</span>
             </CardTitle>
-            <CardDescription className="text-gray-600">Donor availability status over time</CardDescription>
+            <CardDescription className="text-muted">
+              Donor availability status over time
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <ComposedChart data={stackedLineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="date" stroke="#6b7280" />
-                <YAxis stroke="#6b7280" />
-                <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '6px' }} />
-                <Legend />
-                <Area type="monotone" dataKey="unavailable" stackId="1" stroke="#DC2626" fill="#DC2626" fillOpacity={0.6} name="Unavailable" />
-                <Area type="monotone" dataKey="booked" stackId="1" stroke="#0891b2" fill="#0891b2" fillOpacity={0.6} name="Booked" />
-                <Area type="monotone" dataKey="eligible" stackId="1" stroke="#2563eb" fill="#2563eb" fillOpacity={0.6} name="Eligible" />
-                <Line type="monotone" dataKey="total" stroke="#1F2937" strokeWidth={2} dot={false} name="Total" />
-              </ComposedChart>
-            </ResponsiveContainer>
+            <div className="h-80">
+              <ResponsiveContainer width="100%" height="100%">
+                <ComposedChart data={stackedLineData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="#6b7280" 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                  />
+                  <YAxis 
+                    stroke="#6b7280" 
+                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: '#ffffff', 
+                      border: '1px solid #e5e7eb', 
+                      borderRadius: '8px',
+                      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                    }}
+                  />
+                  <Legend />
+                  <Area 
+                    type="monotone" 
+                    dataKey="unavailable" 
+                    stackId="1" 
+                    stroke="#b91c1c" 
+                    fill="#b91c1c" 
+                    fillOpacity={0.6} 
+                    name="Unavailable" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="booked" 
+                    stackId="1" 
+                    stroke="#0e7490" 
+                    fill="#0e7490" 
+                    fillOpacity={0.6} 
+                    name="Booked" 
+                  />
+                  <Area 
+                    type="monotone" 
+                    dataKey="eligible" 
+                    stackId="1" 
+                    stroke="#1e40af" 
+                    fill="#1e40af" 
+                    fillOpacity={0.6} 
+                    name="Eligible" 
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="total" 
+                    stroke="#1f2937" 
+                    strokeWidth={2} 
+                    dot={false} 
+                    name="Total" 
+                  />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
           </CardContent>
         </Card>
 
         {/* Blood Group Distribution - Radial Gradient Chart */}
-        <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+        <Card className="shadow-md border border-gray-200">
           <CardHeader>
-            <CardTitle className="flex items-center space-x-2 text-gray-900">
-              <Droplet className="w-5 h-5 text-blue-600" />
+            <CardTitle className="flex items-center text-neutralDark">
+              <Droplet className="w-5 h-5 text-primary mr-2" />
               <span>Blood Group Distribution</span>
             </CardTitle>
-            <CardDescription className="text-gray-600">Percentage distribution of blood groups</CardDescription>
+            <CardDescription className="text-muted">
+              Percentage distribution of blood groups
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {bloodGroupStatsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
-              <div className="flex flex-col md:flex-row items-center">
-                <ResponsiveContainer width="100%" height={300}>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
                   <RadialBarChart cx="50%" cy="50%" innerRadius="10%" outerRadius="90%" data={radialData}>
-                    <PolarAngleAxis type="number" domain={[0, Math.max(...radialData.map(d => d.value)) * 1.2]} angleAxisId={0} tick={false} />
+                    <PolarAngleAxis 
+                      type="number" 
+                      domain={[0, Math.max(...radialData.map(d => d.value)) * 1.2]} 
+                      angleAxisId={0} 
+                      tick={false} 
+                    />
                     <RadialBar
                       dataKey="value"
                       cornerRadius={10}
@@ -618,7 +813,14 @@ const InventoryManagement = () => {
                       align="center"
                       wrapperStyle={{ paddingTop: '20px' }}
                     />
-                    <Tooltip contentStyle={{ backgroundColor: '#ffffff', border: '1px solid #e5e7eb', borderRadius: '6px' }} />
+                    <Tooltip 
+                      contentStyle={{ 
+                        backgroundColor: '#ffffff', 
+                        border: '1px solid #e5e7eb', 
+                        borderRadius: '8px',
+                        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
+                      }}
+                    />
                   </RadialBarChart>
                 </ResponsiveContainer>
               </div>
@@ -627,103 +829,13 @@ const InventoryManagement = () => {
         </Card>
       </div>
 
-      {/* Blood Groups Overview - Moved below charts and includes all blood groups with gradients */}
-      <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900">
-            <Droplet className="w-5 h-5 text-blue-600" />
-            <span>Blood Groups Overview</span>
-          </CardTitle>
-          <CardDescription className="text-gray-600">Distribution and availability by blood type</CardDescription>
-        </CardHeader>
-        <CardContent>
-          {bloodGroupStatsLoading ? (
-            <div className="flex items-center justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {bloodDistributionData.map((group) => {
-                const color = BLOOD_GROUP_COLORS[group.name as keyof typeof BLOOD_GROUP_COLORS];
-                return (
-                  <div 
-                    key={group.name} 
-                    className="p-4 rounded-lg border border-gray-200 overflow-hidden relative"
-                    style={{
-                      background: `linear-gradient(135deg, ${color.light} 0%, white 100%)`,
-                    }}
-                  >
-                    <div className="absolute top-0 right-0 w-20 h-20 rounded-full opacity-10" 
-                         style={{
-                           background: `radial-gradient(circle, ${color.start} 0%, transparent 70%)`,
-                           transform: 'translate(30%, -30%)'
-                         }}>
-                    </div>
-                    <div className="flex items-center justify-between mb-3 relative z-10">
-                      <div className="flex items-center space-x-2">
-                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ 
-                          backgroundColor: color.start,
-                          boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)`
-                        }}>
-                          <Droplet className="h-5 w-5 text-white" />
-                        </div>
-                        <span className="font-semibold text-lg" style={{ color: color.text }}>{group.name}</span>
-                      </div>
-                      <Badge variant="outline" className="text-xs border-gray-300 text-gray-700 bg-white/80 backdrop-blur-sm">
-                        {group.percentage}%
-                      </Badge>
-                    </div>
-                    <div className="space-y-2 relative z-10">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Eligible:</span>
-                        <span className="font-medium text-gray-900">{group.eligible}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Not Eligible:</span>
-                        <span className="font-medium text-gray-900">{group.notEligible}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Active:</span>
-                        <span className="font-medium text-gray-900">{group.active}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Inactive:</span>
-                        <span className="font-medium text-gray-900">{group.inactive}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Available:</span>
-                        <span className="font-medium text-green-600">{group.available}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Unavailable:</span>
-                        <span className="font-medium text-red-600">{group.unavailable}</span>
-                      </div>
-                      <div className="flex justify-between pt-2 border-t border-gray-200">
-                        <span className="text-sm font-medium text-gray-700">Total:</span>
-                        <span className="font-bold text-gray-900">{group.value}</span>
-                      </div>
-                      {isBloodGroupCritical(group.name) && (
-                        <div className="mt-2 flex items-center text-amber-600">
-                          <AlertTriangle className="h-4 w-4 mr-1" />
-                          <span className="text-xs font-medium">Critical Shortage</span>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Merged Donor Availability Component */}
-      <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+      {/* Donor Availability - MOVED AFTER CHARTS AS REQUESTED */}
+      <Card className="shadow-md border border-gray-200">
         <CardHeader>
           <div className="flex flex-col md:flex-row md:items-center md:justify-between">
             <div>
-              <CardTitle className="text-gray-900">Donor Availability</CardTitle>
-              <CardDescription className="text-gray-600">
+              <CardTitle className="text-neutralDark">Donor Availability</CardTitle>
+              <CardDescription className="text-muted">
                 {activeTab === 'location' 
                   ? 'Consolidated view of donor availability by location and blood group' 
                   : 'Current donor availability status'
@@ -731,13 +843,17 @@ const InventoryManagement = () => {
               </CardDescription>
             </div>
             
-            {/* Tab Navigation */}
             <div className="flex items-center space-x-2 mt-4 md:mt-0">
               <Button
                 variant={activeTab === 'location' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveTab('location')}
-                className={`flex items-center space-x-2 ${activeTab === 'location' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                className={`flex items-center space-x-2 ${
+                  activeTab === 'location' 
+                    ? 'bg-primary text-white' 
+                    : 'text-neutralDark border-gray-300 hover:bg-gray-50'
+                }`}
+                aria-label="View by location"
               >
                 <Map className="h-4 w-4" />
                 <span>By Location</span>
@@ -746,7 +862,12 @@ const InventoryManagement = () => {
                 variant={activeTab === 'donors' ? 'default' : 'outline'}
                 size="sm"
                 onClick={() => setActiveTab('donors')}
-                className={`flex items-center space-x-2 ${activeTab === 'donors' ? 'bg-blue-600 hover:bg-blue-700' : 'text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                className={`flex items-center space-x-2 ${
+                  activeTab === 'donors' 
+                    ? 'bg-primary text-white' 
+                    : 'text-neutralDark border-gray-300 hover:bg-gray-50'
+                }`}
+                aria-label="View individual donors"
               >
                 <List className="h-4 w-4" />
                 <span>Individual Donors</span>
@@ -754,19 +875,19 @@ const InventoryManagement = () => {
             </div>
           </div>
 
-          {/* Filters - Always visible */}
           <div className="flex flex-wrap gap-2 mt-4">
-            <div className="relative">
-              <Search className="absolute left-2 top-2.5 h-4 w-4 text-gray-500" />
+            <div className="relative flex-1 min-w-[250px]">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted" aria-hidden="true" />
               <Input
                 placeholder={activeTab === 'location' ? "Search by location..." : "Search by name, email, phone, or Donor ID..."}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 w-64 border-gray-300"
+                className="pl-9 border-gray-300"
+                aria-label="Search"
               />
             </div>
             <Select value={selectedBloodGroup} onValueChange={setSelectedBloodGroup}>
-              <SelectTrigger className="w-40 border-gray-300">
+              <SelectTrigger className="w-[180px] border-gray-300">
                 <SelectValue placeholder="Blood Group" />
               </SelectTrigger>
               <SelectContent>
@@ -776,8 +897,16 @@ const InventoryManagement = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedDistrict} onValueChange={setSelectedDistrict}>
-              <SelectTrigger className="w-40 border-gray-300">
+            {/* Added district and division filters as requested */}
+            <Select value={selectedDistrict} onValueChange={(value) => {
+              setSelectedDistrict(value);
+              if (value !== 'all') {
+                setSelectedDivision(locationData?.divisions.find(d => 
+                  locationData?.districts.includes(value) && true
+                ) || 'all');
+              }
+            }}>
+              <SelectTrigger className="w-[180px] border-gray-300">
                 <SelectValue placeholder="District" />
               </SelectTrigger>
               <SelectContent>
@@ -787,8 +916,13 @@ const InventoryManagement = () => {
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedDivision} onValueChange={setSelectedDivision}>
-              <SelectTrigger className="w-40 border-gray-300">
+            <Select value={selectedDivision} onValueChange={(value) => {
+              setSelectedDivision(value);
+              if (value !== 'all') {
+                setSelectedDistrict('all');
+              }
+            }}>
+              <SelectTrigger className="w-[180px] border-gray-300">
                 <SelectValue placeholder="Division" />
               </SelectTrigger>
               <SelectContent>
@@ -800,7 +934,7 @@ const InventoryManagement = () => {
             </Select>
             {activeTab === 'donors' && (
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-40 border-gray-300">
+                <SelectTrigger className="w-[180px] border-gray-300">
                   <SelectValue placeholder="Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -810,7 +944,12 @@ const InventoryManagement = () => {
                 </SelectContent>
               </Select>
             )}
-            <Button variant="outline" onClick={clearFilters} className="text-gray-700 border-gray-300 hover:bg-gray-50">
+            <Button 
+              variant="outline" 
+              onClick={clearFilters} 
+              className="text-neutralDark border-gray-300 hover:bg-gray-50"
+              aria-label="Clear filters"
+            >
               <Filter className="h-4 w-4 mr-2" />
               Clear Filters
             </Button>
@@ -821,26 +960,26 @@ const InventoryManagement = () => {
             // Location View
             consolidatedLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Upazila
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         District
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Division
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Blood Group
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Available Donors
                       </th>
                     </tr>
@@ -850,26 +989,33 @@ const InventoryManagement = () => {
                       <tr key={`${item.upazila}-${item.bloodGroup}-${index}`} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">
-                            <MapPin className="h-4 w-4 mr-2 text-gray-500" />
-                            <span className="text-gray-900">{item.upazila}</span>
+                            <MapPin className="h-4 w-4 mr-2 text-muted" aria-hidden="true" />
+                            <span className="text-neutralDark">{item.upazila}</span>
                           </div>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-muted">
                           {item.district}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-muted">
                           {item.division}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             item.bloodGroup.includes('+') ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
+                          }`} aria-hidden="true">
                             <Droplet className="h-4 w-4" />
                           </div>
-                          <span className="ml-2 text-gray-900">{item.bloodGroup}</span>
+                          <span className="ml-2 text-neutralDark">{item.bloodGroup}</span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant={item.availableDonors < 5 ? "destructive" : "outline"} className={item.availableDonors < 5 ? "bg-red-100 text-red-800 border-red-200" : "bg-gray-100 text-gray-800 border-gray-200"}>
+                          <Badge 
+                            variant={item.availableDonors < 5 ? "destructive" : "outline"} 
+                            className={
+                              item.availableDonors < 5 
+                                ? "bg-danger-light text-danger border-danger" 
+                                : "bg-gray-100 text-neutralDark border-gray-200"
+                            }
+                          >
                             {item.availableDonors}
                           </Badge>
                         </td>
@@ -883,35 +1029,35 @@ const InventoryManagement = () => {
             // Individual Donors View
             donorsLoading ? (
               <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead>
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Donor
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Contact
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Blood Group
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Location
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Last Donation
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Next Eligible
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Status
                       </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
@@ -928,38 +1074,38 @@ const InventoryManagement = () => {
                               </AvatarFallback>
                             </Avatar>
                             <div>
-                              <div className="text-sm font-medium text-gray-900">{donor.fullName || donor.username}</div>
-                              <div className="text-sm text-gray-500">Donor ID: {donor.donorId}</div>
+                              <div className="text-sm font-medium text-neutralDark">{donor.fullName || donor.username}</div>
+                              <div className="text-sm text-muted">Donor ID: {donor.donorId}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm">
                             <div className="flex items-center">
-                              <Mail className="h-3 w-3 mr-1 text-gray-500" />
-                              <span className="text-gray-900">{donor.email}</span>
+                              <Mail className="h-3 w-3 mr-1 text-muted" aria-hidden="true" />
+                              <span className="text-neutralDark">{donor.email}</span>
                             </div>
                             <div className="flex items-center mt-1">
-                              <Phone className="h-3 w-3 mr-1 text-gray-500" />
-                              <span className="text-gray-900">{donor.phone}</span>
+                              <Phone className="h-3 w-3 mr-1 text-muted" aria-hidden="true" />
+                              <span className="text-neutralDark">{donor.phone}</span>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                             donor.bloodGroup.includes('+') ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
-                          }`}>
+                          }`} aria-hidden="true">
                             <Droplet className="h-4 w-4" />
                           </div>
-                          <span className="ml-2 text-gray-900">{donor.bloodGroup}</span>
+                          <span className="ml-2 text-neutralDark">{donor.bloodGroup}</span>
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-muted">
                           {donor.district}, {donor.division}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                           {donor.lastDonationDate || 'Never'}
                         </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-muted">
                           {donor.nextEligibleDate}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
@@ -967,12 +1113,22 @@ const InventoryManagement = () => {
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           {donor.status === 'eligible' && (
-                            <Button variant="outline" size="sm" className="text-gray-700 border-gray-300 hover:bg-gray-50">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-neutralDark border-gray-300 hover:bg-gray-50"
+                              onClick={() => handleBookDonor(0, donor.id)}
+                            >
                               Book Donor
                             </Button>
                           )}
                           {donor.status === 'booked' && (
-                            <Button variant="outline" size="sm" className="text-gray-700 border-gray-300 hover:bg-gray-50">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="text-neutralDark border-gray-300 hover:bg-gray-50"
+                              onClick={() => handleCompleteDonation(0, donor.id)}
+                            >
                               Complete Donation
                             </Button>
                           )}
@@ -987,173 +1143,364 @@ const InventoryManagement = () => {
         </CardContent>
       </Card>
 
-      {/* Critical Alerts with Improved Tabbed Interface */}
-      <Card style={{ backgroundColor: COLORS.cardBg }} className="shadow-md border border-gray-200">
+      {/* Blood Groups Overview - COMPLETELY REDESIGNED */}
+      <Card className="shadow-md border border-gray-200">
         <CardHeader>
-          <CardTitle className="flex items-center space-x-2 text-gray-900">
-            <AlertTriangle className="w-5 h-5 text-amber-600" />
-            <span>Critical Alerts</span>
-          </CardTitle>
-          <CardDescription className="text-gray-600">Blood groups requiring immediate attention by upazila</CardDescription>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle className="flex items-center text-neutralDark">
+                <Droplet className="w-5 h-5 text-primary mr-2" />
+                <span>Blood Groups Overview</span>
+              </CardTitle>
+              <CardDescription className="text-muted">
+                Distribution and availability by blood type
+              </CardDescription>
+            </div>
+            
+            <div className="flex items-center space-x-2 mt-4 md:mt-0">
+              <Button
+                variant={viewMode === 'grid' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center space-x-2 ${
+                  viewMode === 'grid' 
+                    ? 'bg-primary text-white' 
+                    : 'text-neutralDark border-gray-300 hover:bg-gray-50'
+                }`}
+                aria-label="View as grid"
+              >
+                <Grid className="h-4 w-4" />
+                <span>Grid</span>
+              </Button>
+              <Button
+                variant={viewMode === 'table' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setViewMode('table')}
+                className={`flex items-center space-x-2 ${
+                  viewMode === 'table' 
+                    ? 'bg-primary text-white' 
+                    : 'text-neutralDark border-gray-300 hover:bg-gray-50'
+                }`}
+                aria-label="View as table"
+              >
+                <Table className="h-4 w-4" />
+                <span>Table</span>
+              </Button>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
-          <Tabs value={criticalAlertTab} onValueChange={setCriticalAlertTab} className="w-full">
-            <div className="flex flex-wrap gap-2 mb-4">
-              {bloodGroups.map((group) => {
-                const isCritical = isBloodGroupCritical(group);
-                const criticalUpazilas = getCriticalUpazilasForBloodGroup(group);
-                const color = BLOOD_GROUP_COLORS[group as keyof typeof BLOOD_GROUP_COLORS];
+          {bloodGroupStatsLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            </div>
+          ) : viewMode === 'grid' ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {bloodDistributionData.map((group) => {
+                const color = BLOOD_GROUP_COLORS[group.name as keyof typeof BLOOD_GROUP_COLORS];
+                const isCritical = isBloodGroupCritical(group.name);
                 
                 return (
-                  <Button
-                    key={group}
-                    variant={criticalAlertTab === group ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setCriticalAlertTab(group)}
-                    className={`relative ${criticalAlertTab === group ? 'text-white' : 'text-gray-700 border-gray-300 hover:bg-gray-50'} ${isCritical ? 'border-amber-300 text-amber-600 hover:bg-amber-50' : ''}`}
-                    style={criticalAlertTab === group ? { backgroundColor: color.start } : {}}
+                  <motion.div 
+                    key={group.name}
+                    whileHover={{ y: -4 }}
+                    className={`p-5 rounded-xl border overflow-hidden relative transition-shadow ${
+                      isCritical 
+                        ? 'border-warning shadow-md' 
+                        : 'border-gray-200 hover:shadow-md'
+                    }`}
+                    style={{
+                      background: `linear-gradient(135deg, ${color.light} 0%, white 100%)`,
+                    }}
                   >
-                    {group}
                     {isCritical && (
-                      <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-amber-500 animate-pulse"></span>
+                      <div className="absolute top-0 right-0 p-2">
+                        <div className="flex items-center text-warning">
+                          <AlertTriangle className="h-4 w-4 mr-1" aria-hidden="true" />
+                          <span className="text-xs font-bold">Critical</span>
+                        </div>
+                      </div>
                     )}
-                    {isCritical && (
-                      <Badge variant="outline" className="ml-2 text-xs px-1 py-0 h-5 bg-amber-100 text-amber-800 border-amber-200">
-                        {criticalUpazilas.length}
-                      </Badge>
-                    )}
-                  </Button>
+                    
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="flex items-center space-x-3">
+                        <div className="w-12 h-12 rounded-full flex items-center justify-center shadow-md" style={{ 
+                          backgroundColor: color.start,
+                        }}>
+                          <Droplet className="h-6 w-6 text-white" aria-hidden="true" />
+                        </div>
+                        <div>
+                          <span className="text-2xl font-bold" style={{ color: color.text }}>
+                            {group.name}
+                          </span>
+                          <div className="text-sm text-muted font-medium mt-1">
+                            {group.percentage}% of total
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm font-medium text-muted">Eligible</span>
+                        <span className="text-lg font-bold text-success">{group.eligible}</span>
+                      </div>
+                      <Progress 
+                        value={(group.eligible / group.value) * 100} 
+                        className="h-2"
+                        aria-label={`Percentage of eligible ${group.name} donors`}
+                      />
+                      
+                      <div className="grid grid-cols-2 gap-2 mt-4">
+                        <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                          <div className="text-xs text-muted">Available</div>
+                          <div className="text-lg font-bold text-success">{group.available}</div>
+                        </div>
+                        <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                          <div className="text-xs text-muted">Unavailable</div>
+                          <div className="text-lg font-bold text-danger">{group.unavailable}</div>
+                        </div>
+                        <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                          <div className="text-xs text-muted">Active</div>
+                          <div className="text-lg font-bold text-info">{group.active}</div>
+                        </div>
+                        <div className="bg-white bg-opacity-60 rounded-lg p-2">
+                          <div className="text-xs text-muted">Inactive</div>
+                          <div className="text-lg font-bold text-muted">{group.inactive}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center pt-2 border-t border-gray-200 mt-3">
+                        <span className="text-sm font-bold text-muted">Total</span>
+                        <span className="text-2xl font-bold" style={{ color: color.text }}>
+                          {group.value}
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
                 );
               })}
             </div>
-            
-            {bloodGroups.map((group) => {
-              const criticalUpazilas = getCriticalUpazilasForBloodGroup(group);
-              const isCritical = criticalUpazilas.length > 0;
-              const groupStats = bloodGroupStats?.find(s => s.bloodGroup === group);
-              const color = BLOOD_GROUP_COLORS[group as keyof typeof BLOOD_GROUP_COLORS];
-              
-              return (
-                <TabsContent key={group} value={group} className="mt-4">
-                  {isCritical ? (
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-lg border #F5F5F0 overflow-hidden relative" 
-                           style={{
-                             background: `linear-gradient(135deg, #F5F5F0 0%, white 100%)`,
-                           }}>
-                        <div className="absolute top-0 right-0 w-32 h-32 rounded-full opacity-10" 
-                             style={{
-                               background: `radial-gradient(circle, ${color.start} 0%, transparent 70%)`,
-                               transform: 'translate(30%, -30%)'
-                             }}>
-                        </div>
-                        <div className="flex items-center justify-between mb-3 relative z-10">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-12 h-12 rounded-full flex items-center justify-center" style={{ 
-                              backgroundColor: color.start,
-                              boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)`
-                            }}>
-                              <Droplet className="h-6 w-6 text-white" />
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead>
+                  <tr>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Blood Group
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Total
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Eligible
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Available
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Unavailable
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Active
+                    </th>
+                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-muted uppercase tracking-wider">
+                      Inactive
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {bloodDistributionData.map((group) => {
+                    const color = BLOOD_GROUP_COLORS[group.name as keyof typeof BLOOD_GROUP_COLORS];
+                    const isCritical = isBloodGroupCritical(group.name);
+                    
+                    return (
+                      <tr key={group.name} className={isCritical ? "bg-warning-light/10" : "hover:bg-gray-50"}>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3`} style={{ backgroundColor: color.start }}>
+                              <Droplet className="h-5 w-5 text-white" />
                             </div>
                             <div>
-                              <p className="font-medium text-lg" style={{ color: color.text }}>
-                                Critical Shortage: {group}
-                              </p>
-                              <p className="text-sm text-gray-600">
-                                {criticalUpazilas.length} critical upazila{criticalUpazilas.length > 1 ? 's' : ''} affected
-                              </p>
+                              <div className="text-sm font-bold" style={{ color: color.text }}>{group.name}</div>
+                              {isCritical && (
+                                <div className="text-xs text-warning flex items-center">
+                                  <AlertTriangle className="h-3 w-3 mr-1" />
+                                  Critical
+                                </div>
+                              )}
                             </div>
                           </div>
-                          <Badge variant="destructive" className="text-sm px-3 py-1 bg-amber-100 text-amber-800 border-amber-200">
-                            {criticalUpazilas.length} Critical
-                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">{group.value}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-success">{group.eligible}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-success">{group.available}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-danger">{group.unavailable}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-info">{group.active}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-muted">{group.inactive}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Critical Alerts - COMPLETELY REDESIGNED */}
+      <Card className="shadow-md border border-gray-200">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+            <div>
+              <CardTitle className="flex items-center text-neutralDark">
+                <AlertTriangle className="w-5 h-5 text-warning mr-2" />
+                <span>Critical Alerts</span>
+              </CardTitle>
+              <CardDescription className="text-muted">
+                Blood groups requiring immediate attention by upazila
+              </CardDescription>
+            </div>
+            
+            <Button 
+              variant="outline" 
+              className="mt-4 md:mt-0 text-warning border-warning hover:bg-warning-light"
+              onClick={() => setActiveTab('location')}
+            >
+              <MapPin className="h-4 w-4 mr-2" />
+              View All Critical Locations
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {bloodGroups.filter(bg => isBloodGroupCritical(bg)).length > 0 ? (
+            <div className="space-y-4">
+              {bloodGroups.filter(bg => isBloodGroupCritical(bg)).map((group) => {
+                const criticalUpazilas = getCriticalUpazilasForBloodGroup(group);
+                const color = BLOOD_GROUP_COLORS[group as keyof typeof BLOOD_GROUP_COLORS];
+                const isExpanded = expandedCriticalGroups[group] || false;
+                const groupStats = bloodGroupStats?.find(s => s.bloodGroup === group);
+                
+                return (
+                  <div 
+                    key={group} 
+                    className="border border-warning rounded-lg overflow-hidden"
+                  >
+                    <div 
+                      className="bg-warning-light/10 p-4 cursor-pointer flex items-center justify-between"
+                      onClick={() => toggleExpandedCriticalGroup(group)}
+                    >
+                      <div className="flex items-center space-x-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ 
+                          backgroundColor: color.start,
+                        }}>
+                          <Droplet className="h-5 w-5 text-white" aria-hidden="true" />
                         </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4 relative z-10">
-                          <div className="p-3 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-200">
-                            <p className="text-sm font-medium text-gray-600">Total Donors</p>
-                            <p className="text-xl font-bold text-gray-900">{groupStats?.totalDonors || 0}</p>
+                        <div>
+                          <div className="flex items-center">
+                            <span className="text-xl font-bold" style={{ color: color.text }}>
+                              {group}
+                            </span>
+                            <Badge className="ml-2 bg-warning text-white border-warning">
+                              {criticalUpazilas.length} Critical
+                            </Badge>
                           </div>
-                          <div className="p-3 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-200">
-                            <p className="text-sm font-medium text-gray-600">Eligible Donors</p>
-                            <p className="text-xl font-bold text-green-600">{groupStats?.eligibleDonors || 0}</p>
+                          <p className="text-sm text-muted">
+                            {criticalUpazilas.length} critical upazila{criticalUpazilas.length > 1 ? 's' : ''} affected
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <div className="grid grid-cols-3 gap-2 mr-4">
+                          <div className="bg-white rounded p-2 text-center">
+                            <div className="text-xs text-muted">Total</div>
+                            <div className="text-sm font-bold text-neutralDark">{groupStats?.totalDonors || 0}</div>
                           </div>
-                          <div className="p-3 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-200">
-                            <p className="text-sm font-medium text-gray-600">Availability Rate</p>
-                            <p className="text-xl font-bold text-gray-900">
+                          <div className="bg-white rounded p-2 text-center">
+                            <div className="text-xs text-muted">Eligible</div>
+                            <div className="text-sm font-bold text-success">{groupStats?.eligibleDonors || 0}</div>
+                          </div>
+                          <div className="bg-white rounded p-2 text-center">
+                            <div className="text-xs text-muted">Rate</div>
+                            <div className="text-sm font-bold text-neutralDark">
                               {groupStats?.totalDonors ? Math.round((groupStats.eligibleDonors / groupStats.totalDonors) * 100) : 0}%
-                            </p>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="mt-3 relative z-10">
-                          <p className="text-sm font-medium mb-2 text-gray-700">Critical Upazilas (&lt;5 donors):</p>
+                        <Button variant="ghost" size="sm" aria-label={isExpanded ? "Collapse" : "Expand"}>
+                          {isExpanded ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: 'auto' }}
+                          exit={{ opacity: 0, height: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="bg-white p-4"
+                        >
+                          <h4 className="text-sm font-medium mb-3 text-neutralDark">Critical Upazilas:</h4>
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {criticalUpazilas.map((upazila) => (
-                              <div key={upazila.upazila} className="flex items-center justify-between p-3 rounded-lg bg-amber-50/80 backdrop-blur-sm border border-amber-200">
+                            {criticalUpazilas.map((upazila, idx) => (
+                              <div key={idx} className="flex items-center justify-between bg-gray-50 rounded p-2">
                                 <div className="flex items-center">
-                                  <MapPin className="w-4 h-4 mr-2 text-amber-600" />
-                                  <span className="text-sm font-medium text-gray-900">{upazila.upazila}</span>
+                                  <MapPin className="w-4 h-4 text-warning mr-2" aria-hidden="true" />
+                                  <span className="text-sm font-medium">{upazila.upazila}</span>
                                 </div>
-                                <Badge variant="outline" className="text-amber-600 border-amber-300 bg-amber-50/80 backdrop-blur-sm">
+                                <Badge variant="outline" className="text-warning border-warning">
                                   {upazila.count} donors
                                 </Badge>
                               </div>
                             ))}
                           </div>
-                        </div>
-                        
-                        <div className="mt-4 flex flex-wrap gap-2 relative z-10">
-                          <Button variant="outline" size="sm" className="text-gray-700 border-gray-300 hover:bg-gray-50">
-                            <Search className="w-4 h-4 mr-2" />
-                            Find Donors
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-gray-700 border-gray-300 hover:bg-gray-50">
-                            <MapPin className="w-4 h-4 mr-2" />
-                            View Map
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-gray-700 border-gray-300 hover:bg-gray-50">
-                            <Mail className="w-4 h-4 mr-2" />
-                            Send Alert
-                          </Button>
-                          <Button variant="outline" size="sm" className="text-gray-700 border-gray-300 hover:bg-gray-50">
-                            <Phone className="w-4 h-4 mr-2" />
-                            Contact Donors
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="text-center py-8">
-                      <div className="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4">
-                        <CheckCircle className="h-8 w-8 text-green-600" />
-                      </div>
-                      <p className="text-lg font-medium text-gray-900">No Critical Shortage</p>
-                      <p className="text-sm text-gray-600">
-                        Blood group {group} has sufficient donors in all upazilas
-                      </p>
-                      <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4 max-w-lg mx-auto">
-                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-                          <p className="text-sm font-medium text-gray-600">Total Donors</p>
-                          <p className="text-xl font-bold text-gray-900">{groupStats?.totalDonors || 0}</p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-                          <p className="text-sm font-medium text-gray-600">Eligible Donors</p>
-                          <p className="text-xl font-bold text-green-600">{groupStats?.eligibleDonors || 0}</p>
-                        </div>
-                        <div className="p-3 rounded-lg bg-gray-50 border border-gray-200">
-                          <p className="text-sm font-medium text-gray-600">Availability Rate</p>
-                          <p className="text-xl font-bold text-gray-900">
-                            {groupStats?.totalDonors ? Math.round((groupStats.eligibleDonors / groupStats.totalDonors) * 100) : 0}%
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </TabsContent>
-              );
-            })}
-          </Tabs>
+                          
+                          <div className="flex gap-2 mt-4">
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-neutralDark border-gray-300 hover:bg-gray-50"
+                              onClick={() => {
+                                setSelectedBloodGroup(group);
+                                setActiveTab('location');
+                              }}
+                            >
+                              <Search className="w-4 h-4 mr-1" aria-hidden="true" />
+                              Find Donors
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="flex-1 text-warning border-warning hover:bg-warning-light"
+                              onClick={() => {
+                                setSelectedBloodGroup(group);
+                                setActiveTab('location');
+                              }}
+                            >
+                              <MapPin className="w-4 h-4 mr-1" aria-hidden="true" />
+                              View Map
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="text-center py-8">
+              <div className="w-16 h-16 rounded-full bg-success-light flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-success" aria-hidden="true" />
+              </div>
+              <p className="text-lg font-medium text-neutralDark">No Critical Shortages</p>
+              <p className="text-sm text-muted mt-1">
+                All blood groups have sufficient donors in all upazilas
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
