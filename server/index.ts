@@ -16,14 +16,18 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Session configuration
-app.use(session({
-  secret: process.env.SESSION_SECRET || 'pulsecare-blood-donor-management-system-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000 // 24 hours default
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'fallback_secret',
+    resave: false,
+    saveUninitialized: false,
+    store: new PostgresStore({
+      pool: db, // pass in your database connection pool here
+      tableName: "user_sessions" // optional, defaults to "sessions"
+    }),
+    cookie: {
+      secure: process.env.NODE_ENV === "production", // required for production https
+      maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
   }
 }));
 
