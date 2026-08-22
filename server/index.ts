@@ -133,8 +133,11 @@ const upload = multer({
 
 // Serve static files from the uploads directory
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
-// Add this line after the existing uploads static serving
-app.use('/assets', express.static(path.join(process.cwd(), 'client', 'src', 'assets')));
+
+// Only use the local assets folder in development mode
+if (process.env.NODE_ENV === 'development') {
+  app.use('/assets', express.static(path.join(process.cwd(), 'client', 'src', 'assets')));
+}
 
 // Gender and Avatar Assignment Endpoints
 app.post("/api/assign-gender", async (req: Request, res: Response) => {
