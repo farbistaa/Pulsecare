@@ -44,7 +44,7 @@ const determineGender = (fullName: string): string | null => {
 };
 
 // Configure multer for file uploads
-const storage = multer.diskstorage({
+const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
     if (!fs.existsSync(uploadDir)) {
