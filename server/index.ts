@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
 import session from "express-session";
+import pgStore from "connect-pg-simple";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { db } from "./db";
@@ -16,20 +17,29 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
 // Session configuration
-app.use(
-  session({
-    secret: process.env.SESSION_SECRET || 'fallback_secret',
-    resave: false,
-    saveUninitialized: false,
-    store: new PostgresStore({
-      pool: db, // pass in your database connection pool here
-      tableName: "user_sessions" // optional, defaults to "sessions"
-    }),
-    cookie: {
-      secure: process.env.NODE_ENV === "production", // required for production https
-      maxAge: 1000 * 60 * 60 * 24 * 7 // 1 week
+const PostgresStore = pgStore(session);
+const sessionConfig: session.SessionOptions = {
+  secret: process.env.SESSION_SECRET || 'pulsecare-blood-donor-management-system-secret-key',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000 // 24 hours default
   }
-}));
+};
+
+// Use Postgres store in production to avoid memory leaks
+if (process.env.DATABASE_URL) {
+  sessionConfig.store = new PostgresStore({
+    conString: process.env.DATABASE_URL,
+    tableName: "user_sessions"
+  });
+} else {
+  console.warn("Warning: DATABASE_URL not found. Falling back to MemoryStore.");
+}
+
+app.use(session(sessionConfig));
 
 // Logging middleware
 app.use((req, res, next) => {
@@ -984,35 +994,26 @@ app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
   console.error(err); // Log the error for debugging
 });
 
-// --- VERCEL SERVERLESS EXPORT ---
-// This export is for Vercel's serverless environment.
-// It creates a handler that Vercel can call for each request.
-export default async (req: any, res: any) => {
-  // Register all the routes from the `routes.ts` file
-  await registerRoutes(app);
+// --- START SERVER ---
+(async () => {
+  const server = await registerRoutes(app);
   
-  // For serverless, we don't need to serve static files here.
-  // Vercel handles static files from the `outputDirectory` defined in vercel.json.
-  // We just pass the request to the Express app.
-  app(req, res);
-};
-
-// --- LOCAL DEVELOPMENT SERVER ---
-// This block will only run when you are in development mode.
-if (process.env.NODE_ENV === "development") {
-  (async () => {
-    const server = await registerRoutes(app);
-    
-    if (!server) {
-      console.error('Failed to create server. Exiting...');
-      process.exit(1);
-    }
-    
+  // If server failed to create, exit early
+  if (!server) {
+    console.error('Failed to create server. Exiting...');
+    process.exit(1);
+    return;
+  }
+  
+  // Setup Vite in development, serve static files in production
+  if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
-    
-    const port = process.env.PORT || 5000;
-    server.listen(port, () => {
-      console.log(`🚀 Local development server running on http://localhost:${port}`);
-    });
-  })();
-}
+  } else {
+    serveStatic(app);
+  }
+  
+  const port = process.env.PORT || 5000;
+  server.listen(port, () => {
+    console.log(`🚀 Server running on port ${port}`);
+  });
+})();
