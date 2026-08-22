@@ -5,8 +5,8 @@ import typography from "@tailwindcss/typography";
 const config: Config = {
   darkMode: "class",
   content: [
-    "./client/index.html",
-    "./client/src/**/*.{js,jsx,ts,tsx}"
+     "./client/**/*.{js,jsx,ts,tsx}",
+    "./shared/**/*.{js,jsx,ts,tsx}"
   ],
   theme: {
     extend: {
